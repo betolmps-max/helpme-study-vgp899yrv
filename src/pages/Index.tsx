@@ -3,7 +3,15 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, LogOut, User as UserIcon, Calendar, BookOpen, FileText } from 'lucide-react'
+import {
+  Loader2,
+  LogOut,
+  User as UserIcon,
+  Calendar,
+  BookOpen,
+  FileText,
+  Shield,
+} from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -76,15 +84,28 @@ export default function Index() {
             Acesse e gerencie suas informações pessoais.
           </CardDescription>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-          className="text-slate-600 hover:text-slate-900"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </Button>
+        <div className="flex items-center gap-2">
+          {user.is_admin && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => navigate('/admin')}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Painel Admin
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="text-slate-600 hover:text-slate-900"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sair
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <div className="flex flex-col md:flex-row gap-8">

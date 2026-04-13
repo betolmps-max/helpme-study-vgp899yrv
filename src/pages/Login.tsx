@@ -32,7 +32,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-export default function Index() {
+export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -54,26 +54,17 @@ export default function Index() {
 
     setIsLoading(false)
 
-    if (data.email === 'demo@eduplatform.com' && data.password === 'demo123') {
-      toast({
-        title: 'Login realizado com sucesso!',
-        description: 'Redirecionando para o painel...',
-      })
-      // Here you would normally redirect to dashboard
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Credenciais inválidas',
-        description: 'Por favor, verifique seu e-mail e senha e tente novamente.',
-      })
-    }
+    toast({
+      title: 'Login realizado com sucesso!',
+      description: 'Bem-vindo ao Helpme Study!',
+    })
   }
 
   return (
     <Card className="border-slate-200 shadow-elevation">
       <CardHeader className="space-y-2 text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-          <School className="h-6 w-6 text-indigo-600" />
+        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+          <School className="h-6 w-6 text-blue-600" />
         </div>
         <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
           Bem-vindo de volta
@@ -116,7 +107,7 @@ export default function Index() {
                     <FormLabel className="text-slate-700">Senha</FormLabel>
                     <a
                       href="#"
-                      className="text-xs font-medium text-indigo-600 hover:text-indigo-500"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-500"
                       onClick={(e) => {
                         e.preventDefault()
                         toast({ description: 'Recuperação de senha não implementada no demo.' })
@@ -159,7 +150,7 @@ export default function Index() {
             />
             <Button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -178,8 +169,8 @@ export default function Index() {
         <div className="text-center text-sm text-slate-500">
           Ainda não tem uma conta?{' '}
           <Link
-            to="/signup"
-            className="font-semibold text-indigo-600 transition-colors hover:text-indigo-500"
+            to="/register"
+            className="font-semibold text-blue-600 transition-colors hover:text-blue-500"
           >
             Cadastre-se
           </Link>

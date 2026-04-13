@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,6 +25,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 const signupSchema = z.object({
   role: z.enum(['professor', 'monitor', 'student'], {
@@ -90,6 +92,13 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { signUp, user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/home')
+    }
+  }, [user, navigate])
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -120,17 +129,37 @@ export default function Register() {
   async function onSubmit(data: SignupFormValues) {
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    const { error } = await signUp({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: data.role,
+    })
 
     setIsLoading(false)
 
+    if (error) {
+      const fieldErrors = extractFieldErrors(error)
+      if (Object.keys(fieldErrors).length > 0) {
+        Object.entries(fieldErrors).forEach(([field, message]) => {
+          form.setError(field as any, { message })
+        })
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao criar conta',
+          description: getErrorMessage(error),
+        })
+      }
+      return
+    }
+
     toast({
       title: 'Conta criada com sucesso!',
-      description: `Bem-vindo à Helpme Study!, ${data.name.split(' ')[0]}!`,
+      description: `Bem-vindo ao Helpme Study, ${data.name.split(' ')[0]}!`,
     })
 
-    navigate('/login')
+    navigate('/home')
   }
 
   return (

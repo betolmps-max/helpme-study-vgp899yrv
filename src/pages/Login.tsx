@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 const loginSchema = z.object({
   email: z.string().email('Digite um e-mail válido'),
@@ -37,6 +39,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { signIn, user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      navigate('/home')
+    }
+  }, [user, navigate])
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -49,15 +58,24 @@ export default function Login() {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const { error } = await signIn(data.email, data.password)
 
     setIsLoading(false)
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao fazer login',
+        description: getErrorMessage(error),
+      })
+      return
+    }
 
     toast({
       title: 'Login realizado com sucesso!',
       description: 'Bem-vindo ao Helpme Study!',
     })
+    navigate('/home')
   }
 
   return (

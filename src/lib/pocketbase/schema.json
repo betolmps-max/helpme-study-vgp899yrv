@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-13T19:54:11.395Z",
+  "generatedAt": "2026-04-13T20:32:46.988Z",
   "collections": [
     {
       "name": "users",
@@ -164,6 +164,90 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "agendamentos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
+        "view": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
+        "delete": "@request.auth.is_admin = true"
+      },
+      "fields": [
+        {
+          "name": "estudante_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "monitor_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "assunto",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_agendamento",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "horario_inicio",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "horario_fim",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "local",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pendente", "confirmado", "cancelado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_agendamentos_data ON agendamentos (data_agendamento)",
+        "CREATE INDEX idx_agendamentos_status ON agendamentos (status)",
+        "CREATE INDEX idx_agendamentos_estudante ON agendamentos (estudante_id)",
+        "CREATE INDEX idx_agendamentos_monitor ON agendamentos (monitor_id)"
+      ]
     }
   ]
 }

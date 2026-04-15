@@ -59,7 +59,13 @@ export default function Layout() {
                 </Link>
               </Button>
             )}
-            <div className="text-sm font-medium text-slate-600 hidden md:block">{user.email}</div>
+            <Link
+              to="/perfil"
+              className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors max-w-[80px] sm:max-w-[150px] md:max-w-[200px] truncate"
+              title={user.name || user.email}
+            >
+              {user.name || user.email}
+            </Link>
             <Button variant="outline" size="sm" onClick={signOut} className="gap-2">
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline-block">Logout</span>

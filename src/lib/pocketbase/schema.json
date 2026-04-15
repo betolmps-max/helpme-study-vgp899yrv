@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-15T15:21:03.657Z",
+  "generatedAt": "2026-04-15T15:35:10.984Z",
   "collections": [
     {
       "name": "users",
@@ -248,6 +248,40 @@
         "CREATE INDEX idx_agendamentos_estudante ON agendamentos (estudante_id)",
         "CREATE INDEX idx_agendamentos_monitor ON agendamentos (monitor_id)"
       ]
+    },
+    {
+      "name": "disciplinas",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.is_admin = true",
+        "delete": "@request.auth.is_admin = true"
+      },
+      "fields": [
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_disciplinas_nome ON disciplinas (nome)"]
     }
   ]
 }

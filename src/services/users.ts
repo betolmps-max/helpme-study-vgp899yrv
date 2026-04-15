@@ -11,3 +11,10 @@ export const updateUserAdminStatus = (id: string, isAdmin: boolean) => {
     is_admin: isAdmin,
   })
 }
+
+export const getMonitors = () => {
+  return pb.collection('users').getFullList({
+    filter: 'user_type = "monitor"',
+    sort: 'name',
+  })
+}

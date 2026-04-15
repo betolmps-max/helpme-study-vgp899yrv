@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from 'react-router-dom'
-import { School, Shield, LogOut } from 'lucide-react'
+import { School, Shield, LogOut, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,17 @@ export default function Layout() {
 
         {user && (
           <div className="flex items-center gap-2 sm:gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50"
+            >
+              <Link to="/agendamentos">
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline-block">Agendamentos</span>
+              </Link>
+            </Button>
             {user.is_admin && (
               <Button
                 variant="ghost"
@@ -31,7 +42,7 @@ export default function Layout() {
               >
                 <Link to="/admin">
                   <Shield className="h-4 w-4" />
-                  <span className="hidden sm:inline-block">Admin Dashboard</span>
+                  <span className="hidden sm:inline-block">Admin</span>
                 </Link>
               </Button>
             )}

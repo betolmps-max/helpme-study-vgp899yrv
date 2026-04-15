@@ -8,6 +8,7 @@ import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Agendamentos from './pages/Agendamentos'
 import GestaoAgendamentos from './pages/GestaoAgendamentos'
+import Profile from './pages/Profile'
 import Layout from './components/Layout'
 import { AuthProvider } from './hooks/use-auth'
 import { AdminRoute } from './components/AdminRoute'
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/agendamentos" element={<Agendamentos />} />
             <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
+            <Route path="/perfil" element={<Profile />} />
 
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboard />} />

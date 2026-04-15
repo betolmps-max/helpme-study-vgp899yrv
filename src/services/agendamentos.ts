@@ -24,6 +24,13 @@ export const getAgendamentos = () =>
     expand: 'estudante_id,monitor_id',
   })
 
+export const getAgendamentosPorMonitor = (monitorId: string) =>
+  pb.collection('agendamentos').getFullList<Agendamento>({
+    filter: `monitor_id = "${monitorId}"`,
+    sort: '-data_agendamento',
+    expand: 'estudante_id,monitor_id',
+  })
+
 export const getAgendamento = (id: string) =>
   pb.collection('agendamentos').getOne<Agendamento>(id, {
     expand: 'estudante_id,monitor_id',

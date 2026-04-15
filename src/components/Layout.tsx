@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from 'react-router-dom'
-import { School, Shield, LogOut, Calendar } from 'lucide-react'
+import { School, Shield, LogOut, Calendar, ClipboardList } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -33,6 +33,19 @@ export default function Layout() {
                 <span className="hidden sm:inline-block">Agendamentos</span>
               </Link>
             </Button>
+            {(user.user_type === 'monitor' || user.user_type === 'professor') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+              >
+                <Link to="/gestao-agendamentos">
+                  <ClipboardList className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Gestão</span>
+                </Link>
+              </Button>
+            )}
             {user.is_admin && (
               <Button
                 variant="ghost"

@@ -16,6 +16,7 @@ import { getAppointmentsList } from '@/services/appointments'
 import { Users, CalendarDays, Shield, ShieldOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
+import { LocationsManager } from '@/components/admin/LocationsManager'
 
 export default function AdminDashboard() {
   const { user: currentUser } = useAuth()
@@ -160,6 +161,8 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <LocationsManager />
     </div>
   )
 }

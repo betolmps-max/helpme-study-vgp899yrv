@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { CalendarIcon, Clock, BookOpen } from 'lucide-react'
 
 import { useToast } from '@/hooks/use-toast'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { createAgendamento } from '@/services/agendamentos'
 import { cn } from '@/lib/utils'
 import pb from '@/lib/pocketbase/client'
@@ -48,6 +49,71 @@ import { Calendar } from '@/components/ui/calendar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 
+const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 8)
+
+function parseAvailabilitySlots(text: string) {
+  const active = new Set<string>()
+  if (!text) return active
+
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object') {
+      for (const [key, val] of Object.entries(parsed)) {
+        const dayIdx = DAYS.findIndex((d) =>
+          d.toLowerCase().replace('á', 'a').startsWith(key.toLowerCase().substring(0, 3)),
+        )
+        if (dayIdx !== -1) {
+          const times = Array.isArray(val) ? val : [val]
+          times.forEach((t) => {
+            const m = String(t).match(/(\d{1,2}).*?-.*?(\d{1,2})/)
+            if (m) {
+              const start = parseInt(m[1])
+              const end = parseInt(m[2])
+              for (let h = start; h < end; h++) active.add(`${dayIdx}-${h}`)
+            }
+          })
+        }
+      }
+      if (active.size > 0) return active
+    }
+  } catch (e) {
+    // ignore non-json
+  }
+
+  const regex =
+    /(dom|seg|ter|qua|qui|sex|s[aá]b)[a-z-]*\s*(?:feira)?\s*[:-]?\s*(?:das|de)?\s*(\d{1,2})(?::\d{2})?h?\s*(?:a|-|às|ate|até)\s*(\d{1,2})(?::\d{2})?h?/gi
+  let match
+  while ((match = regex.exec(text)) !== null) {
+    const dayStr = match[1].toLowerCase().replace('á', 'a')
+    const dayIdx = DAYS.findIndex((d) => d.toLowerCase().replace('á', 'a').startsWith(dayStr))
+    if (dayIdx !== -1) {
+      const start = parseInt(match[2], 10)
+      const end = parseInt(match[3], 10)
+      if (!isNaN(start) && !isNaN(end) && start < end) {
+        for (let h = start; h < end; h++) active.add(`${dayIdx}-${h}`)
+      }
+    }
+  }
+
+  if (active.size === 0) {
+    const fallbackRegex =
+      /(?:todos os dias|diariamente)\s*(?:das|de)?\s*(\d{1,2})(?::\d{2})?h?\s*(?:a|-|às|ate|até)\s*(\d{1,2})(?::\d{2})?h?/gi
+    const matchFallback = fallbackRegex.exec(text)
+    if (matchFallback) {
+      const start = parseInt(matchFallback[1], 10)
+      const end = parseInt(matchFallback[2], 10)
+      if (!isNaN(start) && !isNaN(end) && start < end) {
+        for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+          for (let h = start; h < end; h++) active.add(`${dayIdx}-${h}`)
+        }
+      }
+    }
+  }
+
+  return active
+}
+
 const bookingSchema = z.object({
   assunto: z.string().min(1, 'Obrigatório'),
   data_agendamento: z.date({ required_error: 'Obrigatório' }),
@@ -68,6 +134,23 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
   const mentorUser = profile.expand?.user_id
   const name = mentorUser?.name || 'Usuário Sem Nome'
   const subjects = profile.subjects ? profile.subjects.split(',').map((s: string) => s.trim()) : []
+
+  const activeSlots = useMemo(
+    () => parseAvailabilitySlots(profile.availability),
+    [profile.availability],
+  )
+
+  const handleSlotClick = (dayIdx: number, hour: number) => {
+    form.setValue('horario_inicio', `${String(hour).padStart(2, '0')}:00`)
+    form.setValue('horario_fim', `${String(hour + 1).padStart(2, '0')}:00`)
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    const currentDay = d.getDay()
+    const diff = dayIdx >= currentDay ? dayIdx - currentDay : 7 - (currentDay - dayIdx)
+    d.setDate(d.getDate() + diff)
+    form.setValue('data_agendamento', d)
+    setOpen(true)
+  }
 
   const onSubmit = async (data: z.infer<typeof bookingSchema>) => {
     if (!user) {
@@ -150,11 +233,73 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           </div>
         )}
         {profile.availability && (
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+          <div className="flex flex-col gap-1.5">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" /> Disponibilidade
             </h4>
-            <p className="text-sm text-foreground/90">{profile.availability}</p>
+            {activeSlots.size > 0 ? (
+              <div className="border rounded-md overflow-hidden bg-background flex flex-col mt-1 shadow-sm">
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b bg-muted/40">
+                  <div className="p-1 text-[10px] font-medium text-center border-r w-10 shrink-0" />
+                  {DAYS.map((d) => (
+                    <div
+                      key={d}
+                      className="py-1 px-0.5 text-[10px] font-medium text-center border-r last:border-0 truncate"
+                    >
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                <ScrollArea className="h-[140px] w-full">
+                  <div className="min-w-[220px]">
+                    {HOURS.map((h) => (
+                      <div
+                        key={h}
+                        className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b last:border-0"
+                      >
+                        <div className="py-1 px-0.5 text-[9px] text-muted-foreground text-center border-r w-10 shrink-0 flex items-center justify-center bg-muted/10">
+                          {h}:00
+                        </div>
+                        {DAYS.map((_, dayIdx) => {
+                          const isActive = activeSlots.has(`${dayIdx}-${h}`)
+                          return (
+                            <div
+                              key={dayIdx}
+                              role="button"
+                              tabIndex={isActive ? 0 : -1}
+                              onClick={() => {
+                                if (isActive) handleSlotClick(dayIdx, h)
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  if (isActive) handleSlotClick(dayIdx, h)
+                                }
+                              }}
+                              className={cn(
+                                'border-r last:border-0 transition-colors h-6',
+                                isActive
+                                  ? 'bg-primary/30 hover:bg-primary/50 cursor-pointer'
+                                  : 'bg-transparent hover:bg-muted/30 cursor-default',
+                              )}
+                              title={isActive ? `Agendar ${DAYS[dayIdx]} às ${h}:00` : undefined}
+                            />
+                          )
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="vertical" />
+                </ScrollArea>
+                <div className="bg-muted/20 p-1 text-center border-t">
+                  <p className="text-[10px] text-muted-foreground">
+                    * Clique num horário verde para agendar
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-foreground/90">{profile.availability}</p>
+            )}
           </div>
         )}
       </CardContent>

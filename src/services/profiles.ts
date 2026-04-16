@@ -11,6 +11,11 @@ export interface Profile {
 }
 
 export const getProfiles = () => pb.collection('profiles').getFullList<Profile>()
+export const getMentorProfiles = () =>
+  pb.collection('profiles').getFullList<Profile & { expand: { user_id: any } }>({
+    filter: 'user_id.user_type="monitor" || user_id.user_type="professor"',
+    expand: 'user_id',
+  })
 export const getProfile = (id: string) => pb.collection('profiles').getOne<Profile>(id)
 export const getProfileByUserId = (userId: string) =>
   pb.collection('profiles').getFirstListItem<Profile>(`user_id="${userId}"`)

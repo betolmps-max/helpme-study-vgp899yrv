@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound'
 import Agendamentos from './pages/Agendamentos'
 import GestaoAgendamentos from './pages/GestaoAgendamentos'
 import Profile from './pages/Profile'
+import BuscarMonitores from './pages/BuscarMonitores'
 import Layout from './components/Layout'
 import { AuthProvider } from './hooks/use-auth'
 import { AdminRoute } from './components/AdminRoute'
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/agendamentos" element={<Agendamentos />} />
             <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
             <Route path="/perfil" element={<Profile />} />
+            <Route path="/buscar-monitores" element={<BuscarMonitores />} />
 
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboard />} />

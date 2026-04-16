@@ -49,8 +49,8 @@ import { Calendar } from '@/components/ui/calendar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 
-const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 8)
+const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 8) // 08:00 to 22:00
 
 function parseAvailabilitySlots(text: string) {
   const active = new Set<string>()
@@ -143,10 +143,18 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
   const handleSlotClick = (dayIdx: number, hour: number) => {
     form.setValue('horario_inicio', `${String(hour).padStart(2, '0')}:00`)
     form.setValue('horario_fim', `${String(hour + 1).padStart(2, '0')}:00`)
+
+    // dayIdx: 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sáb, 6=Dom
+    const targetJsDay = dayIdx === 6 ? 0 : dayIdx + 1
     const d = new Date()
     d.setHours(0, 0, 0, 0)
     const currentDay = d.getDay()
-    const diff = dayIdx >= currentDay ? dayIdx - currentDay : 7 - (currentDay - dayIdx)
+
+    let diff = targetJsDay - currentDay
+    if (diff < 0) {
+      diff += 7
+    }
+
     d.setDate(d.getDate() + diff)
     form.setValue('data_agendamento', d)
     setOpen(true)
@@ -279,7 +287,7 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                               className={cn(
                                 'border-r last:border-0 transition-colors h-6',
                                 isActive
-                                  ? 'bg-primary/30 hover:bg-primary/50 cursor-pointer'
+                                  ? 'bg-primary/40 hover:bg-primary/60 cursor-pointer border-primary/20'
                                   : 'bg-transparent hover:bg-muted/30 cursor-default',
                               )}
                               title={isActive ? `Agendar ${DAYS[dayIdx]} às ${h}:00` : undefined}

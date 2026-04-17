@@ -31,10 +31,21 @@ export function WeeklySchedule() {
   const { user } = useAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+
+  const fetchProfile = async () => {
+    if (!user) return
+    try {
+      const record = await pb.collection('profiles').getFirstListItem(`user_id = "${user.id}"`)
+      setProfile(record)
+    } catch (e) {
+      console.error('Failed to fetch profile', e)
+    }
+  }
 
   const fetchAgendamentos = async () => {
     if (!user) return
@@ -72,11 +83,63 @@ export function WeeklySchedule() {
 
   useEffect(() => {
     fetchAgendamentos()
+    fetchProfile()
   }, [user])
 
   useRealtime('agendamentos', () => {
     fetchAgendamentos()
   })
+
+  useRealtime('profiles', () => {
+    fetchProfile()
+  })
+
+  const parsedAvailability = useMemo(() => {
+    if (!profile?.availability) return null
+    try {
+      return JSON.parse(profile.availability)
+    } catch {
+      return null
+    }
+  }, [profile?.availability])
+
+  const isSlotAvailable = (dayIndex: number, hour: number) => {
+    if (!parsedAvailability) return true
+
+    if (Array.isArray(parsedAvailability)) {
+      const dayRules = parsedAvailability.filter(
+        (a: any) => String(a.day) === String(dayIndex) || String(a.dayOfWeek) === String(dayIndex),
+      )
+      if (dayRules.length === 0) return false
+
+      return dayRules.some((rule: any) => {
+        const start = rule.startTime || rule.start || '00:00'
+        const end = rule.endTime || rule.end || '24:00'
+        const startHour = parseInt(start.split(':')[0], 10)
+        const endHour = parseInt(end.split(':')[0], 10)
+        return hour >= startHour && hour < endHour
+      })
+    }
+
+    if (typeof parsedAvailability === 'object') {
+      const dayRules = parsedAvailability[dayIndex] || parsedAvailability[String(dayIndex)]
+      if (!dayRules) return false
+
+      if (Array.isArray(dayRules)) {
+        return dayRules.some((range: string) => {
+          if (typeof range === 'string' && range.includes('-')) {
+            const [start, end] = range.split('-')
+            const startHour = parseInt(start?.split(':')[0] || '0', 10)
+            const endHour = parseInt(end?.split(':')[0] || '24', 10)
+            return hour >= startHour && hour < endHour
+          }
+          return true
+        })
+      }
+    }
+
+    return true
+  }
 
   const mockAgendamentos = useMemo(() => {
     return [
@@ -240,10 +303,17 @@ export function WeeklySchedule() {
                     }
                   })
 
+                  const available = isSlotAvailable(day.getDay(), hour)
+
                   return (
                     <div
                       key={`${day.toISOString()}-${hour}`}
-                      className="border-r border-b border-slate-100/50 bg-white/50 p-0.5 min-h-[38px] md:min-h-[45px] hover:bg-slate-50 transition-colors relative group"
+                      className={cn(
+                        'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group',
+                        available
+                          ? 'bg-white/50 hover:bg-slate-50'
+                          : 'bg-slate-800 hover:bg-slate-700',
+                      )}
                     >
                       {cellAppointments.map((app) => (
                         <div

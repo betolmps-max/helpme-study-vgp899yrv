@@ -1,8 +1,10 @@
-import { Fragment, useEffect, useState, useMemo } from 'react'
+import { Fragment, useEffect, useState, useMemo, useRef } from 'react'
 import { startOfWeek, addDays, format, parseISO, isSameDay, addWeeks, subWeeks } from 'date-fns'
 import { CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -33,6 +35,14 @@ export function WeeklySchedule() {
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const [activeCell, setActiveCell] = useState<{
+    day: Date
+    hour: number
+    dayIndex: number
+  } | null>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
@@ -184,6 +194,104 @@ export function WeeklySchedule() {
 
   const displayAgendamentos = agendamentos.length > 0 ? agendamentos : mockAgendamentos
 
+  const handleInteract = (day: Date, hour: number, dayIndex: number) => {
+    setActiveCell({ day, hour, dayIndex })
+    setIsMenuOpen(true)
+  }
+
+  const handleTouchStart = (day: Date, hour: number, dayIndex: number) => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    longPressTimer.current = setTimeout(() => {
+      handleInteract(day, hour, dayIndex)
+    }, 500)
+  }
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  const handleMakeAvailable = async () => {
+    if (!activeCell || !profile) return
+    setIsMenuOpen(false)
+    const loadingToast = toast.loading('Atualizando disponibilidade...')
+
+    try {
+      const dayIdx = activeCell.dayIndex
+      const startStr = `${activeCell.hour.toString().padStart(2, '0')}:00`
+      const endStr = `${(activeCell.hour + 1).toString().padStart(2, '0')}:00`
+      const newRange = `${startStr}-${endStr}`
+
+      let currentAvail = parsedAvailability ? JSON.parse(JSON.stringify(parsedAvailability)) : {}
+
+      if (Array.isArray(currentAvail)) {
+        currentAvail.push({
+          day: dayIdx,
+          startTime: startStr,
+          endTime: endStr,
+        })
+      } else {
+        if (!currentAvail[dayIdx]) currentAvail[dayIdx] = []
+        if (!currentAvail[dayIdx].includes(newRange)) {
+          currentAvail[dayIdx].push(newRange)
+        }
+      }
+
+      await pb.collection('profiles').update(profile.id, {
+        availability: JSON.stringify(currentAvail),
+      })
+
+      toast.success('Horário disponibilizado!', { id: loadingToast })
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao atualizar disponibilidade', { id: loadingToast })
+    }
+  }
+
+  const handleCancelAppointment = async () => {
+    if (!activeCell) return
+    setIsMenuOpen(false)
+    const loadingToast = toast.loading('Cancelando agendamento...')
+
+    try {
+      const cellAppointments = displayAgendamentos.filter((a) => {
+        try {
+          const datePart = a.data_agendamento.split(' ')[0]
+          const d = parseISO(datePart)
+          if (!isSameDay(d, activeCell.day)) return false
+          const aHour = parseInt(a.horario_inicio?.split(':')[0] || '0', 10)
+          return aHour === activeCell.hour
+        } catch {
+          return false
+        }
+      })
+
+      const activeApps = cellAppointments.filter((a) => a.status !== 'cancelado')
+
+      if (activeApps.length === 0) {
+        toast.error('Nenhum agendamento ativo neste horário.', { id: loadingToast })
+        return
+      }
+
+      for (const app of activeApps) {
+        if (app.id.startsWith('mock')) {
+          toast.success('Agendamento mockado cancelado (simulação).', { id: loadingToast })
+          continue
+        }
+        await pb.collection('agendamentos').update(app.id, {
+          status: 'cancelado',
+        })
+      }
+
+      toast.success('Agendamento cancelado com sucesso!', { id: loadingToast })
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao cancelar agendamento', { id: loadingToast })
+    }
+  }
+
   const appointmentsThisWeek = displayAgendamentos.filter((a) => {
     try {
       const datePart = a.data_agendamento.split(' ')[0]
@@ -305,41 +413,99 @@ export function WeeklySchedule() {
 
                   const available = isSlotAvailable(day.getDay(), hour)
 
+                  const isCellActive =
+                    activeCell?.dayIndex === day.getDay() && activeCell?.hour === hour
+
                   return (
-                    <div
+                    <Popover
                       key={`${day.toISOString()}-${hour}`}
-                      className={cn(
-                        'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group',
-                        available
-                          ? 'bg-transparent hover:bg-slate-50'
-                          : 'bg-slate-800 hover:bg-slate-700',
-                      )}
+                      open={isCellActive && isMenuOpen}
+                      onOpenChange={(open) => {
+                        if (!open) setIsMenuOpen(false)
+                      }}
                     >
-                      {cellAppointments.map((app) => (
+                      <PopoverTrigger asChild>
                         <div
-                          key={app.id}
+                          onDoubleClick={(e) => {
+                            e.preventDefault()
+                            handleInteract(day, hour, day.getDay())
+                          }}
+                          onTouchStart={() => handleTouchStart(day, hour, day.getDay())}
+                          onTouchEnd={handleTouchEnd}
+                          onTouchMove={handleTouchEnd}
                           className={cn(
-                            'mb-0.5 md:mb-1 rounded-sm border px-1 py-0.5 md:p-1 text-[9px] md:text-[10px] shadow-sm flex flex-col gap-0.5 relative z-10 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-default overflow-hidden',
-                            getStatusColors(app.status),
+                            'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group cursor-pointer select-none',
+                            available
+                              ? 'bg-transparent hover:bg-slate-50'
+                              : 'bg-slate-800 hover:bg-slate-700',
+                            isCellActive && isMenuOpen && 'ring-2 ring-indigo-500 ring-inset z-20',
                           )}
                         >
-                          <div className="font-bold leading-tight truncate" title={app.assunto}>
-                            {app.assunto}
-                          </div>
-                          <div className="mt-auto flex flex-row items-center justify-between opacity-90 text-[8px] md:text-[9px] font-medium gap-1">
-                            <span
-                              className="truncate max-w-[60px] md:max-w-[80px]"
-                              title={counterpartName(app)}
+                          {cellAppointments.map((app) => (
+                            <div
+                              key={app.id}
+                              className={cn(
+                                'mb-0.5 md:mb-1 rounded-sm border px-1 py-0.5 md:p-1 text-[9px] md:text-[10px] shadow-sm flex flex-col gap-0.5 relative z-10 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-default overflow-hidden',
+                                getStatusColors(app.status),
+                              )}
                             >
-                              {counterpartName(app)}
-                            </span>
-                            <span className="bg-white/40 px-0.5 md:px-1 rounded backdrop-blur-sm shadow-sm w-fit leading-tight">
-                              {app.horario_inicio}
-                            </span>
-                          </div>
+                              <div className="font-bold leading-tight truncate" title={app.assunto}>
+                                {app.assunto}
+                              </div>
+                              <div className="mt-auto flex flex-row items-center justify-between opacity-90 text-[8px] md:text-[9px] font-medium gap-1">
+                                <span
+                                  className="truncate max-w-[60px] md:max-w-[80px]"
+                                  title={counterpartName(app)}
+                                >
+                                  {counterpartName(app)}
+                                </span>
+                                <span className="bg-white/40 px-0.5 md:px-1 rounded backdrop-blur-sm shadow-sm w-fit leading-tight">
+                                  {app.horario_inicio}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </PopoverTrigger>
+                      {isCellActive && (
+                        <PopoverContent
+                          className="w-56 p-1 flex flex-col gap-0.5 shadow-lg border-slate-200 z-50"
+                          align="start"
+                          side="bottom"
+                          sideOffset={2}
+                        >
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 mb-1 border-b border-slate-100">
+                            Ações ({format(day, 'dd/MM')} às {hour.toString().padStart(2, '0')}:00)
+                          </div>
+                          {!available && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="justify-start font-medium text-xs h-8 px-2"
+                              onClick={handleMakeAvailable}
+                            >
+                              Disponibilizar horário
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            onClick={handleCancelAppointment}
+                          >
+                            Desfazer marcar estudo
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            onClick={handleCancelAppointment}
+                          >
+                            Desmarcar
+                          </Button>
+                        </PopoverContent>
+                      )}
+                    </Popover>
                   )
                 })}
               </Fragment>

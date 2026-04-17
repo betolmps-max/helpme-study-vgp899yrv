@@ -29,7 +29,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 const signupSchema = z.object({
-  role: z.enum(['professor', 'monitor', 'student'], {
+  role: z.enum(['professor', 'monitor', 'student', 'responsavel'], {
     required_error: 'Por favor, selecione seu perfil',
   }),
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -81,6 +81,19 @@ const ROLES = [
       icon: 'text-orange-600',
       button: 'bg-orange-600 hover:bg-orange-700 focus-visible:ring-orange-600',
       focus: 'focus-visible:ring-orange-600',
+    },
+  },
+  {
+    id: 'responsavel',
+    label: 'Responsável',
+    icon: Users,
+    color: 'purple',
+    classes: {
+      selected: 'border-purple-600 bg-purple-50 text-purple-700 ring-1 ring-purple-600',
+      hover: 'hover:border-purple-200 hover:bg-purple-50/50',
+      icon: 'text-purple-600',
+      button: 'bg-purple-600 hover:bg-purple-700 focus-visible:ring-purple-600',
+      focus: 'focus-visible:ring-purple-600',
     },
   },
 ] as const
@@ -181,7 +194,7 @@ export default function Register() {
                 <FormItem className="space-y-3">
                   <FormLabel className="text-slate-700">Selecione seu perfil</FormLabel>
                   <FormControl>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {ROLES.map((role) => {
                         const isSelected = field.value === role.id
                         const Icon = role.icon

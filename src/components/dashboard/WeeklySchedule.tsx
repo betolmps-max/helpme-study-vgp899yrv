@@ -220,8 +220,8 @@ export function WeeklySchedule() {
             {HOURS.map((hour) => (
               <Fragment key={hour}>
                 {/* Hours column (sticky) */}
-                <div className="border-r border-b border-slate-200 bg-white p-1 md:p-2 text-right sticky left-0 z-10">
-                  <span className="text-[9px] md:text-[11px] font-medium text-slate-400 -mt-2 md:-mt-2.5 block bg-white pr-0.5 md:pr-1">
+                <div className="border-r border-b border-slate-200 bg-white p-1 text-right sticky left-0 z-10 flex flex-col">
+                  <span className="text-[9px] md:text-[10px] font-medium text-slate-400 -mt-1.5 md:-mt-2 block bg-white pr-0.5 md:pr-1 leading-none">
                     {`${hour.toString().padStart(2, '0')}:00`}
                   </span>
                 </div>
@@ -243,27 +243,27 @@ export function WeeklySchedule() {
                   return (
                     <div
                       key={`${day.toISOString()}-${hour}`}
-                      className="border-r border-b border-slate-100/50 bg-white/50 p-0.5 md:p-1 min-h-[75px] md:min-h-[90px] hover:bg-slate-50 transition-colors relative group"
+                      className="border-r border-b border-slate-100/50 bg-white/50 p-0.5 min-h-[38px] md:min-h-[45px] hover:bg-slate-50 transition-colors relative group"
                     >
                       {cellAppointments.map((app) => (
                         <div
                           key={app.id}
                           className={cn(
-                            'mb-1 md:mb-1.5 rounded-sm md:rounded-md border p-1 md:p-2 text-[10px] md:text-xs shadow-sm flex flex-col gap-0.5 md:gap-1 relative z-10 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-default overflow-hidden',
+                            'mb-0.5 md:mb-1 rounded-sm border px-1 py-0.5 md:p-1 text-[9px] md:text-[10px] shadow-sm flex flex-col gap-0.5 relative z-10 transition-all hover:-translate-y-0.5 hover:shadow-md cursor-default overflow-hidden',
                             getStatusColors(app.status),
                           )}
                         >
-                          <div className="font-bold leading-tight line-clamp-2" title={app.assunto}>
+                          <div className="font-bold leading-tight truncate" title={app.assunto}>
                             {app.assunto}
                           </div>
-                          <div className="mt-auto flex flex-col xl:flex-row xl:items-center justify-between opacity-90 text-[9px] md:text-[10px] font-medium gap-0.5 md:gap-1">
+                          <div className="mt-auto flex flex-row items-center justify-between opacity-90 text-[8px] md:text-[9px] font-medium gap-1">
                             <span
-                              className="truncate max-w-full xl:max-w-[70px]"
+                              className="truncate max-w-[60px] md:max-w-[80px]"
                               title={counterpartName(app)}
                             >
                               {counterpartName(app)}
                             </span>
-                            <span className="bg-white/40 px-1 rounded backdrop-blur-sm shadow-sm w-fit">
+                            <span className="bg-white/40 px-0.5 md:px-1 rounded backdrop-blur-sm shadow-sm w-fit leading-tight">
                               {app.horario_inicio}
                             </span>
                           </div>

@@ -83,7 +83,7 @@ export function WeeklySchedule() {
       {
         id: 'mock1',
         assunto: 'Dúvidas de Cálculo I',
-        data_agendamento: format(addDays(weekStart, 1), 'yyyy-MM-dd 12:00:00.000Z'),
+        data_agendamento: format(addDays(weekStart, 1), "yyyy-MM-dd 12:00:00.000'Z'"),
         horario_inicio: '10:00',
         horario_fim: '11:00',
         status: 'confirmado',
@@ -95,7 +95,7 @@ export function WeeklySchedule() {
       {
         id: 'mock2',
         assunto: 'Revisão de Física',
-        data_agendamento: format(addDays(weekStart, 3), 'yyyy-MM-dd 12:00:00.000Z'),
+        data_agendamento: format(addDays(weekStart, 3), "yyyy-MM-dd 12:00:00.000'Z'"),
         horario_inicio: '14:00',
         horario_fim: '15:00',
         status: 'pendente',
@@ -107,7 +107,7 @@ export function WeeklySchedule() {
       {
         id: 'mock3',
         assunto: 'Orientação de TCC',
-        data_agendamento: format(addDays(weekStart, 4), 'yyyy-MM-dd 12:00:00.000Z'),
+        data_agendamento: format(addDays(weekStart, 4), "yyyy-MM-dd 12:00:00.000'Z'"),
         horario_inicio: '16:00',
         horario_fim: '17:00',
         status: 'cancelado',

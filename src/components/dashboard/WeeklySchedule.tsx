@@ -104,7 +104,7 @@ export function WeeklySchedule() {
   }, [profile?.availability])
 
   const isSlotAvailable = (dayIndex: number, hour: number) => {
-    if (!parsedAvailability) return true
+    if (!parsedAvailability || Object.keys(parsedAvailability).length === 0) return true
 
     if (Array.isArray(parsedAvailability)) {
       const dayRules = parsedAvailability.filter(
@@ -123,7 +123,7 @@ export function WeeklySchedule() {
 
     if (typeof parsedAvailability === 'object') {
       const dayRules = parsedAvailability[dayIndex] || parsedAvailability[String(dayIndex)]
-      if (!dayRules) return false
+      if (!dayRules || dayRules.length === 0) return false
 
       if (Array.isArray(dayRules)) {
         return dayRules.some((range: string) => {
@@ -311,7 +311,7 @@ export function WeeklySchedule() {
                       className={cn(
                         'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group',
                         available
-                          ? 'bg-white/50 hover:bg-slate-50'
+                          ? 'bg-transparent hover:bg-slate-50'
                           : 'bg-slate-800 hover:bg-slate-700',
                       )}
                     >

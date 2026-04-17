@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { UserLocationsList } from '@/components/locations/UserLocationsList'
 import { ResponsibleDashboard } from '@/components/vinculos/ResponsibleDashboard'
 import { StudentPendingLinks } from '@/components/vinculos/StudentPendingLinks'
+import { WeeklySchedule } from '@/components/dashboard/WeeklySchedule'
 
 const TYPE_COLORS: Record<string, string> = {
   professor: 'bg-blue-100 text-blue-800 ring-blue-600/20',
@@ -80,6 +81,7 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
+      <WeeklySchedule />
       <StudentPendingLinks userId={user.id} />
       {user.user_type === 'responsavel' && <ResponsibleDashboard userId={user.id} />}
 

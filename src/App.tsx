@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Index from './pages/Index'
+import Landing from './pages/Landing'
 import NotFound from './pages/NotFound'
 import Agendamentos from './pages/Agendamentos'
 import GestaoAgendamentos from './pages/GestaoAgendamentos'
@@ -23,7 +24,7 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/" element={<Landing />} />
             <Route path="/home" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

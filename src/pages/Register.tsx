@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -105,6 +105,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { signUp, user } = useAuth()
 
   useEffect(() => {
@@ -113,9 +114,12 @@ export default function Register() {
     }
   }, [user, navigate])
 
+  const initialRole = searchParams.get('role') as RoleId | undefined
+
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+      role: initialRole,
       name: '',
       email: '',
       password: '',

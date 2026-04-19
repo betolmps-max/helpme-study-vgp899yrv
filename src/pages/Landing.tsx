@@ -53,14 +53,14 @@ export default function Landing() {
       <div className="flex-1 flex flex-col items-center w-full">
         <div className="mb-6 animate-fade-in-down">
           <img
-            src="https://img.usecurling.com/i?q=cute%20monster&color=green&shape=lineal-color"
-            alt="Mascot"
-            className="w-20 h-20 object-contain drop-shadow-sm"
+            src="https://img.usecurling.com/i?q=book&color=violet&shape=lineal-color"
+            alt="Help me study Logo"
+            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-md"
           />
         </div>
 
-        <h1 className="text-3xl font-extrabold text-[#1c1c3c] mb-10 text-center tracking-tight animate-fade-in-up leading-tight">
-          Salas de aula mais felizes
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1c1c3c] mb-10 text-center tracking-tight animate-fade-in-up leading-tight">
+          Help me study
         </h1>
 
         <div className="w-full space-y-4">

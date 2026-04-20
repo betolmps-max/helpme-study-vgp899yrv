@@ -60,9 +60,15 @@ export default function Landing() {
           />
         </div>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1c1c3c] mb-10 text-center tracking-tight animate-fade-in-up leading-tight">
-          Help me study
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1c1c3c] mb-3 text-center tracking-tight animate-fade-in-up leading-tight">
+          Help me study!
         </h1>
+        <p
+          className="text-lg sm:text-xl text-slate-600 mb-10 text-center animate-fade-in-up"
+          style={{ animationDelay: '100ms' }}
+        >
+          Connecting students and tutors
+        </p>
 
         <div className="w-full space-y-4">
           {roles.map((role, idx) => (

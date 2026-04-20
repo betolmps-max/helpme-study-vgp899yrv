@@ -40,23 +40,23 @@ export default function Landing() {
   ]
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] w-full max-w-md mx-auto px-4 py-6 font-sans">
-      <div className="flex justify-end w-full mb-8">
+    <>
+      <div className="fixed top-4 right-4 sm:top-8 sm:right-8 z-50">
         <Button
           variant="secondary"
-          className="rounded-full bg-[#f3e8ff] text-[#4c1d95] hover:bg-[#e9d5ff] font-bold px-6 py-5 text-base shadow-none border-0"
+          className="rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold px-6 py-5 text-base shadow-sm border-0 transition-colors"
           onClick={() => navigate('/login')}
         >
           Entrar
         </Button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center w-full">
+      <div className="flex flex-col items-center w-full max-w-md mx-auto pt-8 pb-12 font-sans">
         <div className="mb-6 animate-fade-in-down">
           <img
             src={logoImg}
             alt="Help me study Logo"
-            className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-full shadow-lg border-4 border-white"
+            className="w-40 h-40 sm:w-48 sm:h-48 object-contain rounded-full shadow-lg border-4 border-white"
           />
         </div>
 
@@ -64,7 +64,7 @@ export default function Landing() {
           Help me study!
         </h1>
         <p
-          className="text-lg sm:text-xl text-slate-600 mb-10 text-center animate-fade-in-up"
+          className="text-lg sm:text-xl text-slate-600 mb-10 text-center animate-fade-in-up font-medium"
           style={{ animationDelay: '100ms' }}
         >
           Connecting students and tutors
@@ -86,6 +86,6 @@ export default function Landing() {
           ))}
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -1,26 +1,34 @@
 import { Outlet, useLocation, Link } from 'react-router-dom'
-import { School, Shield, LogOut, Calendar, ClipboardList } from 'lucide-react'
+import { Shield, LogOut, Calendar, ClipboardList, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
 
 export default function Layout() {
   const location = useLocation()
   const { user, signOut } = useAuth()
+  
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
+  const isLanding = location.pathname === '/'
+  const hideHeader = isAuthPage || isLanding
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 pt-20 p-4 font-sans sm:p-8">
-      <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-4 py-4 sm:px-8 border-b bg-white/80 backdrop-blur-md z-10">
-        <Link
-          to="/home"
-          className="flex items-center gap-2 text-slate-700 hover:opacity-80 transition-opacity"
-        >
-          <School className="h-6 w-6 text-indigo-600" />
-          <span className="font-bold tracking-tight hidden sm:inline-block">Helpme Study!</span>
-        </Link>
+    <main className={cn("flex min-h-screen flex-col items-center bg-slate-50 font-sans", hideHeader ? "justify-center p-4 sm:p-8" : "pt-24 p-4 sm:p-8")}>
+      {!hideHeader && (
+        <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-3 py-3 sm:px-8 border-b border-slate-200 bg-white/90 backdrop-blur-md z-10 shadow-sm">
+          <Link
+            to="/home"
+            className="flex items-center gap-2 sm:gap-3 text-slate-700 hover:opacity-80 transition-opacity min-w-0"
+          >
+            <img src={logoImg} alt="Help me study!" className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 object-contain rounded-full shadow-sm border border-slate-100" />
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold tracking-tight text-[#1c1c3c] leading-none text-base sm:text-lg truncate">Help me study!</span>
+              <span className="text-[9px] sm:text-xs text-slate-500 font-medium leading-none mt-1 truncate">Connecting students and tutors</span>
+            </div>
+          </Link>
 
-        {user && (
+          {user && (
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="ghost"
@@ -76,8 +84,8 @@ export default function Layout() {
 
       <div
         className={cn(
-          'w-full animate-in fade-in zoom-in-95 duration-500',
-          isAuthPage ? 'max-w-md' : 'max-w-5xl',
+          'w-full animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center',
+          isAuthPage ? 'max-w-md' : (isLanding ? 'max-w-full' : 'max-w-5xl'),
         )}
       >
         <Outlet />

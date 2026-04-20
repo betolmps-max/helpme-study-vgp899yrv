@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 import { useEffect } from 'react'
+import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -53,9 +54,9 @@ export default function Landing() {
       <div className="flex-1 flex flex-col items-center w-full">
         <div className="mb-6 animate-fade-in-down">
           <img
-            src="https://img.usecurling.com/i?q=book&color=violet&shape=lineal-color"
+            src={logoImg}
             alt="Help me study Logo"
-            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-md"
+            className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-full shadow-lg border-4 border-white"
           />
         </div>
 

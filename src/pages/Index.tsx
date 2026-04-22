@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/use-auth'
 import { useEffect, useState } from 'react'
+import logoUrl from '@/assets/adapta-image-1776703638057-f5c2b.png'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -112,19 +113,15 @@ export default function Index() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-center justify-center py-8 md:py-12 space-y-6">
-        <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden border-4 border-white shadow-xl ring-1 ring-slate-900/5 bg-slate-100">
-          <img
-            src="https://img.usecurling.com/p/400/400?q=study"
-            alt="Help me Study Logo"
-            className="h-full w-full object-cover"
-          />
+        <div className="relative h-48 w-48 md:h-64 md:w-64 rounded-full overflow-hidden border-4 border-white shadow-xl ring-1 ring-slate-900/5 bg-slate-100">
+          <img src={logoUrl} alt="Help me Study Logo" className="h-full w-full object-cover" />
         </div>
         <div className="space-y-2 text-center px-4">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 drop-shadow-sm">
             Help me Study!
           </h1>
           <p className="text-lg md:text-xl text-slate-600 font-medium max-w-[600px] mx-auto mt-2">
-            O seu espaço de aprendizado colaborativo
+            connecting students and tutors
           </p>
         </div>
       </div>

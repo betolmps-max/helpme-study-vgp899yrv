@@ -46,6 +46,7 @@ export default function Profile() {
   const [bio, setBio] = useState('')
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [availability, setAvailability] = useState<AvailabilityMap>({})
+  const [maxParticipants, setMaxParticipants] = useState<number>(1)
 
   const [subjectsList, setSubjectsList] = useState<Disciplina[]>([])
   const [newSubject, setNewSubject] = useState('')
@@ -75,6 +76,7 @@ export default function Profile() {
         if (profileRes) {
           setProfileId(profileRes.id)
           setBio(profileRes.bio || '')
+          setMaxParticipants(profileRes.max_participants || 1)
 
           const userSubjects = profileRes.subjects
             ? profileRes.subjects
@@ -164,6 +166,7 @@ export default function Profile() {
         bio,
         subjects: selectedSubjects.join(', '),
         availability: JSON.stringify(availability),
+        ...(isEducator && { max_participants: maxParticipants }),
       }
 
       if (profileId) {
@@ -306,77 +309,101 @@ export default function Profile() {
           </div>
 
           {isEducator && (
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Availability Scheduler</Label>
-              <div className="space-y-2 rounded-md border p-4 bg-muted/30">
-                {DAYS.map((day) => {
-                  const isEnabled = !!availability[day.id]
-                  return (
-                    <div
-                      key={day.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-background border shadow-sm transition-colors"
+            <>
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Students per Session</Label>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setMaxParticipants(num)}
+                      className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center text-sm sm:text-base font-medium transition-colors ${
+                        maxParticipants === num
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`day-${day.id}`}
-                          checked={isEnabled}
-                          onCheckedChange={() => toggleDay(day.id)}
-                        />
-                        <Label
-                          htmlFor={`day-${day.id}`}
-                          className="font-medium cursor-pointer w-24"
-                        >
-                          {day.label}
-                        </Label>
-                      </div>
-
-                      {isEnabled && (
-                        <div className="flex flex-col gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-                          {availability[day.id].map((slot, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center space-x-2 animate-in fade-in zoom-in-95 duration-200"
-                            >
-                              <Input
-                                type="time"
-                                className="w-[120px] h-9"
-                                value={slot.start}
-                                onChange={(e) => updateTime(day.id, index, 'start', e.target.value)}
-                              />
-                              <span className="text-muted-foreground text-sm font-medium px-1">
-                                to
-                              </span>
-                              <Input
-                                type="time"
-                                className="w-[120px] h-9"
-                                value={slot.end}
-                                onChange={(e) => updateTime(day.id, index, 'end', e.target.value)}
-                              />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-destructive"
-                                onClick={() => removeTimeSlot(day.id, index)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => addTimeSlot(day.id)}
-                          >
-                            <Plus className="mr-2 h-4 w-4" /> Adicionar
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                      {num}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Availability Scheduler</Label>
+                <div className="space-y-2 rounded-md border p-4 bg-muted/30">
+                  {DAYS.map((day) => {
+                    const isEnabled = !!availability[day.id]
+                    return (
+                      <div
+                        key={day.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-background border shadow-sm transition-colors"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`day-${day.id}`}
+                            checked={isEnabled}
+                            onCheckedChange={() => toggleDay(day.id)}
+                          />
+                          <Label
+                            htmlFor={`day-${day.id}`}
+                            className="font-medium cursor-pointer w-24"
+                          >
+                            {day.label}
+                          </Label>
+                        </div>
+
+                        {isEnabled && (
+                          <div className="flex flex-col gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+                            {availability[day.id].map((slot, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center space-x-2 animate-in fade-in zoom-in-95 duration-200"
+                              >
+                                <Input
+                                  type="time"
+                                  className="w-[120px] h-9"
+                                  value={slot.start}
+                                  onChange={(e) =>
+                                    updateTime(day.id, index, 'start', e.target.value)
+                                  }
+                                />
+                                <span className="text-muted-foreground text-sm font-medium px-1">
+                                  to
+                                </span>
+                                <Input
+                                  type="time"
+                                  className="w-[120px] h-9"
+                                  value={slot.end}
+                                  onChange={(e) => updateTime(day.id, index, 'end', e.target.value)}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 text-destructive"
+                                  onClick={() => removeTimeSlot(day.id, index)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => addTimeSlot(day.id)}
+                            >
+                              <Plus className="mr-2 h-4 w-4" /> Adicionar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </CardContent>
         <CardFooter className="flex justify-end border-t p-6 bg-muted/10 rounded-b-lg">

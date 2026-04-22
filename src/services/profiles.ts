@@ -6,6 +6,7 @@ export interface Profile {
   bio?: string
   subjects?: string
   availability?: string
+  max_participants?: number
   created: string
   updated: string
 }

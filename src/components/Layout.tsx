@@ -14,14 +14,9 @@ export default function Layout() {
   const hideHeader = isAuthPage || isLanding
 
   return (
-    <main
-      className={cn(
-        'flex min-h-screen flex-col items-center bg-slate-50 font-sans',
-        hideHeader ? 'justify-center p-4 sm:p-8' : 'pt-24 p-4 sm:p-8',
-      )}
-    >
+    <div className="flex min-h-screen flex-col bg-slate-50 font-sans">
       {!hideHeader && (
-        <header className="absolute left-0 right-0 top-0 flex items-center justify-between px-3 py-3 sm:px-8 border-b border-slate-200 bg-white/90 backdrop-blur-md z-10 shadow-sm">
+        <header className="sticky top-0 z-40 w-full flex flex-shrink-0 items-center justify-between px-3 py-3 sm:px-8 border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm">
           <Link
             to="/home"
             className="flex items-center gap-2 sm:gap-3 text-slate-700 hover:opacity-80 transition-opacity min-w-0"
@@ -96,14 +91,21 @@ export default function Layout() {
         </header>
       )}
 
-      <div
+      <main
         className={cn(
-          'w-full animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center',
-          isAuthPage ? 'max-w-md' : isLanding ? 'max-w-full' : 'max-w-5xl',
+          'flex flex-1 flex-col items-center w-full',
+          hideHeader ? 'justify-center p-4 sm:p-8' : 'p-4 sm:p-8',
         )}
       >
-        <Outlet />
-      </div>
-    </main>
+        <div
+          className={cn(
+            'w-full animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center',
+            isAuthPage ? 'max-w-md' : isLanding ? 'max-w-full' : 'max-w-5xl',
+          )}
+        >
+          <Outlet />
+        </div>
+      </main>
+    </div>
   )
 }

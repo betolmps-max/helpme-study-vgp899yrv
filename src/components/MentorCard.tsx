@@ -124,6 +124,7 @@ const bookingSchema = z.object({
 
 export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any) {
   const [open, setOpen] = useState(false)
+  const [isAvailabilityExpanded, setIsAvailabilityExpanded] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof bookingSchema>>({
@@ -306,7 +307,25 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-foreground/90">{profile.availability}</p>
+              <div
+                className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1"
+                onDoubleClick={() => setIsAvailabilityExpanded(!isAvailabilityExpanded)}
+                title="Dê um duplo clique para expandir/recolher"
+              >
+                <p
+                  className={cn(
+                    'text-sm text-foreground/90 transition-all duration-300',
+                    !isAvailabilityExpanded && 'line-clamp-3',
+                  )}
+                >
+                  {profile.availability}
+                </p>
+                {!isAvailabilityExpanded && profile.availability?.length > 100 && (
+                  <p className="text-[10px] text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Duplo clique para expandir
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -7,6 +7,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { getDisciplinas, Disciplina } from '@/services/disciplinas'
 import { getLocaisList } from '@/services/locais'
 import { getMentorProfiles } from '@/services/profiles'
+import pb from '@/lib/pocketbase/client'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -27,17 +28,26 @@ export default function BuscarMonitores() {
   const [profiles, setProfiles] = useState<any[]>([])
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([])
   const [locais, setLocais] = useState<any[]>([])
+  const [favoritosLocais, setFavoritosLocais] = useState<any[]>([])
 
   const [filterSubject, setFilterSubject] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [filterLocal, setFilterLocal] = useState<string>('all')
+  const [filterName, setFilterName] = useState<string>('')
+
   const [loading, setLoading] = useState(true)
 
   const loadData = () => {
-    Promise.all([getMentorProfiles(), getDisciplinas(), getLocaisList()])
-      .then(([p, d, l]) => {
+    Promise.all([
+      getMentorProfiles(),
+      getDisciplinas(),
+      getLocaisList(),
+      pb.collection('favoritos_locais').getFullList(),
+    ])
+      .then(([p, d, l, favs]) => {
         setProfiles(p)
         setDisciplinas(d)
         setLocais(l)
+        setFavoritosLocais(favs)
       })
       .finally(() => setLoading(false))
   }
@@ -54,19 +64,31 @@ export default function BuscarMonitores() {
     loadData()
   })
 
+  useRealtime('favoritos_locais', () => {
+    loadData()
+  })
+
   const filteredProfiles = profiles.filter((p) => {
+    const userType = p.expand?.user_id?.user_type
+    if (userType !== 'monitor' && userType !== 'professor') return false
+
     if (filterSubject !== 'all') {
       if (!p.subjects) return false
       const subjList = p.subjects.split(',').map((s: string) => s.trim().toLowerCase())
       if (!subjList.includes(filterSubject.toLowerCase())) return false
     }
 
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase()
+    if (filterLocal !== 'all') {
+      const monitorLocais = favoritosLocais
+        .filter((f) => f.user_id === p.expand?.user_id?.id)
+        .map((f) => f.local_id)
+      if (!monitorLocais.includes(filterLocal)) return false
+    }
+
+    if (filterName.trim() !== '') {
+      const query = filterName.toLowerCase()
       const name = (p.expand?.user_id?.name || '').toLowerCase()
-      const bio = (p.bio || '').toLowerCase()
-      const subjects = (p.subjects || '').toLowerCase()
-      if (!name.includes(query) && !bio.includes(query) && !subjects.includes(query)) {
+      if (!name.includes(query)) {
         return false
       }
     }
@@ -75,8 +97,8 @@ export default function BuscarMonitores() {
   })
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8 animate-fade-in-up">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="container mx-auto p-4 md:p-8 space-y-8 animate-fade-in-up w-full">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Buscar Monitores</h1>
           <p className="text-muted-foreground mt-1">
@@ -84,26 +106,41 @@ export default function BuscarMonitores() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap w-full lg:w-auto gap-4">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, bio..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Nome do monitor..."
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
               className="pl-9"
             />
           </div>
-          <div className="w-full sm:w-56">
+          <div className="w-full sm:w-48">
             <Select value={filterSubject} onValueChange={setFilterSubject}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por disciplina" />
+                <SelectValue placeholder="Matéria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as disciplinas</SelectItem>
+                <SelectItem value="all">Todas as matérias</SelectItem>
                 {disciplinas.map((d) => (
                   <SelectItem key={d.id} value={d.nome}>
                     {d.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-full sm:w-48">
+            <Select value={filterLocal} onValueChange={setFilterLocal}>
+              <SelectTrigger>
+                <SelectValue placeholder="Local" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os locais</SelectItem>
+                {locais.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -121,16 +158,15 @@ export default function BuscarMonitores() {
       ) : filteredProfiles.length === 0 ? (
         <div className="text-center py-20 border rounded-lg bg-muted/20">
           <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-          <h3 className="text-lg font-medium">Nenhum mentor encontrado</h3>
-          <p className="text-muted-foreground mt-1">
-            Tente buscar por outra disciplina ou limpe o filtro.
-          </p>
-          {(filterSubject !== 'all' || searchQuery !== '') && (
+          <h3 className="text-lg font-medium">Nenhum monitor encontrado</h3>
+          <p className="text-muted-foreground mt-1">Tente buscar com outros filtros ou limpe-os.</p>
+          {(filterSubject !== 'all' || filterLocal !== 'all' || filterName !== '') && (
             <Button
               variant="link"
               onClick={() => {
                 setFilterSubject('all')
-                setSearchQuery('')
+                setFilterLocal('all')
+                setFilterName('')
               }}
               className="mt-2"
             >

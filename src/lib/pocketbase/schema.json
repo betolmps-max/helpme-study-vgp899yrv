@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T18:36:31.139Z",
+  "generatedAt": "2026-04-22T18:41:00.483Z",
   "collections": [
     {
       "name": "users",
@@ -333,8 +333,8 @@
       "name": "favoritos_locais",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && user_id = @request.auth.id",
-        "view": "@request.auth.id != '' && user_id = @request.auth.id",
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
         "create": "@request.auth.id != ''",
         "update": "@request.auth.id != '' && user_id = @request.auth.id",
         "delete": "@request.auth.id != '' && user_id = @request.auth.id"

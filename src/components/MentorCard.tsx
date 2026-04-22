@@ -125,6 +125,7 @@ const bookingSchema = z.object({
 export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any) {
   const [open, setOpen] = useState(false)
   const [isAvailabilityExpanded, setIsAvailabilityExpanded] = useState(false)
+  const [isBioExpanded, setIsBioExpanded] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof bookingSchema>>({
@@ -234,11 +235,29 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           </div>
         </div>
         {profile.bio && (
-          <div>
+          <div className="overflow-hidden">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
               Sobre
             </h4>
-            <p className="text-sm text-foreground/90 line-clamp-3 leading-relaxed">{profile.bio}</p>
+            <div
+              className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1"
+              onDoubleClick={() => setIsBioExpanded(!isBioExpanded)}
+              title="Dê um duplo clique para expandir/recolher"
+            >
+              <p
+                className={cn(
+                  'text-sm text-foreground/90 leading-relaxed transition-all duration-300 break-words',
+                  !isBioExpanded && 'line-clamp-3',
+                )}
+              >
+                {profile.bio}
+              </p>
+              {!isBioExpanded && profile.bio?.length > 100 && (
+                <p className="text-[10px] text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Duplo clique para expandir
+                </p>
+              )}
+            </div>
           </div>
         )}
         {profile.availability && (
@@ -308,13 +327,13 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
               </div>
             ) : (
               <div
-                className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1"
+                className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1 overflow-hidden"
                 onDoubleClick={() => setIsAvailabilityExpanded(!isAvailabilityExpanded)}
                 title="Dê um duplo clique para expandir/recolher"
               >
                 <p
                   className={cn(
-                    'text-sm text-foreground/90 transition-all duration-300',
+                    'text-sm text-foreground/90 transition-all duration-300 break-words',
                     !isAvailabilityExpanded && 'line-clamp-3',
                   )}
                 >

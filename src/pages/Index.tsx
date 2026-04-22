@@ -111,6 +111,11 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
+      <div className="flex w-full justify-center py-4 md:py-8">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 drop-shadow-sm text-center">
+          Help me Study!
+        </h1>
+      </div>
       <WeeklySchedule />
       <StudentPendingLinks userId={user.id} />
       {user.user_type === 'responsavel' && <ResponsibleDashboard userId={user.id} />}

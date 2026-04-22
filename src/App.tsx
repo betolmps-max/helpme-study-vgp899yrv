@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/agendamentos" element={<Agendamentos />} />
             <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
             <Route path="/perfil" element={<Profile />} />
-            <Route path="/buscar-monitores" element={<BuscarMonitores />} />
+            <Route path="/monitores/busca" element={<BuscarMonitores />} />
 
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboard />} />

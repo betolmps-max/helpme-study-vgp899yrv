@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState, useMemo, useRef } from 'react'
 import { startOfWeek, addDays, format, parseISO, isSameDay, addWeeks, subWeeks } from 'date-fns'
 import { CalendarIcon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -31,6 +32,7 @@ const getStatusColors = (status: string) => {
 
 export function WeeklySchedule() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [agendamentos, setAgendamentos] = useState<any[]>([])
   const [profile, setProfile] = useState<any>(null)
@@ -114,7 +116,7 @@ export function WeeklySchedule() {
   }, [profile?.availability])
 
   const isSlotAvailable = (dayIndex: number, hour: number) => {
-    if (!parsedAvailability || Object.keys(parsedAvailability).length === 0) return true
+    if (!parsedAvailability || Object.keys(parsedAvailability).length === 0) return false
 
     if (Array.isArray(parsedAvailability)) {
       const dayRules = parsedAvailability.filter(
@@ -151,48 +153,7 @@ export function WeeklySchedule() {
     return true
   }
 
-  const mockAgendamentos = useMemo(() => {
-    return [
-      {
-        id: 'mock1',
-        assunto: 'Dúvidas de Cálculo I',
-        data_agendamento: format(addDays(weekStart, 1), "yyyy-MM-dd 12:00:00.000'Z'"),
-        horario_inicio: '10:00',
-        horario_fim: '11:00',
-        status: 'confirmado',
-        expand: {
-          monitor_id: { name: 'Prof. Silva' },
-          estudante_id: { name: 'João (Filho)' },
-        },
-      },
-      {
-        id: 'mock2',
-        assunto: 'Revisão de Física',
-        data_agendamento: format(addDays(weekStart, 3), "yyyy-MM-dd 12:00:00.000'Z'"),
-        horario_inicio: '14:00',
-        horario_fim: '15:00',
-        status: 'pendente',
-        expand: {
-          monitor_id: { name: 'Prof. Mendes' },
-          estudante_id: { name: 'Ana Souza' },
-        },
-      },
-      {
-        id: 'mock3',
-        assunto: 'Orientação de TCC',
-        data_agendamento: format(addDays(weekStart, 4), "yyyy-MM-dd 12:00:00.000'Z'"),
-        horario_inicio: '16:00',
-        horario_fim: '17:00',
-        status: 'cancelado',
-        expand: {
-          monitor_id: { name: 'Prof. Almeida' },
-          estudante_id: { name: 'Carlos Lima' },
-        },
-      },
-    ]
-  }, [weekStart])
-
-  const displayAgendamentos = agendamentos.length > 0 ? agendamentos : mockAgendamentos
+  const displayAgendamentos = agendamentos
 
   const handleInteract = (day: Date, hour: number, dayIndex: number) => {
     setActiveCell({ day, hour, dayIndex })
@@ -250,6 +211,46 @@ export function WeeklySchedule() {
     }
   }
 
+  const handleRemoveAvailability = async () => {
+    if (!activeCell || !profile) return
+    setIsMenuOpen(false)
+    const loadingToast = toast.loading('Atualizando disponibilidade...')
+
+    try {
+      const dayIdx = activeCell.dayIndex
+      const startStr = `${activeCell.hour.toString().padStart(2, '0')}:00`
+      const endStr = `${(activeCell.hour + 1).toString().padStart(2, '0')}:00`
+      const rangeToRemove = `${startStr}-${endStr}`
+
+      let currentAvail = parsedAvailability ? JSON.parse(JSON.stringify(parsedAvailability)) : {}
+
+      if (Array.isArray(currentAvail)) {
+        currentAvail = currentAvail.filter(
+          (a: any) =>
+            !(
+              String(a.day) === String(dayIdx) &&
+              (a.startTime === startStr || a.start === startStr)
+            ),
+        )
+      } else {
+        if (currentAvail[dayIdx]) {
+          currentAvail[dayIdx] = currentAvail[dayIdx].filter(
+            (range: string) => range !== rangeToRemove,
+          )
+        }
+      }
+
+      await pb.collection('profiles').update(profile.id, {
+        availability: JSON.stringify(currentAvail),
+      })
+
+      toast.success('Horário bloqueado!', { id: loadingToast })
+    } catch (error) {
+      console.error(error)
+      toast.error('Erro ao atualizar disponibilidade', { id: loadingToast })
+    }
+  }
+
   const handleCancelAppointment = async () => {
     if (!activeCell) return
     setIsMenuOpen(false)
@@ -292,7 +293,11 @@ export function WeeklySchedule() {
     }
   }
 
-  const appointmentsThisWeek = displayAgendamentos.filter((a) => {
+  const activeAgendamentos = displayAgendamentos.filter(
+    (a) => a.status === 'pendente' || a.status === 'confirmado',
+  )
+
+  const appointmentsThisWeek = activeAgendamentos.filter((a) => {
     try {
       const datePart = a.data_agendamento.split(' ')[0]
       const d = parseISO(datePart)
@@ -435,9 +440,11 @@ export function WeeklySchedule() {
                           onTouchMove={handleTouchEnd}
                           className={cn(
                             'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group cursor-pointer select-none',
-                            available
-                              ? 'bg-transparent hover:bg-slate-50'
-                              : 'bg-slate-800 hover:bg-slate-700',
+                            available && cellAppointments.length === 0
+                              ? 'bg-transparent hover:bg-indigo-50/50'
+                              : !available && cellAppointments.length === 0
+                                ? 'bg-slate-100 hover:bg-slate-200/50'
+                                : 'bg-transparent hover:bg-slate-50',
                             isCellActive && isMenuOpen && 'ring-2 ring-indigo-500 ring-inset z-20',
                           )}
                         >
@@ -477,32 +484,55 @@ export function WeeklySchedule() {
                           <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 mb-1 border-b border-slate-100">
                             Ações ({format(day, 'dd/MM')} às {hour.toString().padStart(2, '0')}:00)
                           </div>
-                          {!available && (
+
+                          {cellAppointments.length === 0 ? (
+                            <>
+                              {!available ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="justify-start font-medium text-xs h-8 px-2"
+                                  onClick={handleMakeAvailable}
+                                >
+                                  Disponibilizar horário
+                                </Button>
+                              ) : (
+                                <>
+                                  {(user?.user_type === 'student' ||
+                                    user?.user_type === 'responsavel') && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="justify-start font-medium text-xs h-8 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                      onClick={() => {
+                                        setIsMenuOpen(false)
+                                        navigate('/buscar-monitores')
+                                      }}
+                                    >
+                                      Buscar monitor
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                    onClick={handleRemoveAvailability}
+                                  >
+                                    Remover disponibilidade
+                                  </Button>
+                                </>
+                              )}
+                            </>
+                          ) : (
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="justify-start font-medium text-xs h-8 px-2"
-                              onClick={handleMakeAvailable}
+                              className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              onClick={handleCancelAppointment}
                             >
-                              Disponibilizar horário
+                              Cancelar Agendamento
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            onClick={handleCancelAppointment}
-                          >
-                            Desfazer marcar estudo
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            onClick={handleCancelAppointment}
-                          >
-                            Desmarcar
-                          </Button>
                         </PopoverContent>
                       )}
                     </Popover>

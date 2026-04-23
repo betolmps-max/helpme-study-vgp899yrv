@@ -62,6 +62,19 @@ export default function Layout() {
                   </Link>
                 </Button>
               )}
+              {user.user_type === 'lider_escolar' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                >
+                  <Link to="/gestao-lider">
+                    <ClipboardList className="h-4 w-4" />
+                    <span className="hidden sm:inline-block">Minha Gestão</span>
+                  </Link>
+                </Button>
+              )}
               {user.user_type === 'student' && (
                 <Button
                   variant="ghost"

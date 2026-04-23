@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T18:41:00.483Z",
+  "generatedAt": "2026-04-23T13:10:06.177Z",
   "collections": [
     {
       "name": "users",
@@ -43,7 +43,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["professor", "monitor", "student", "responsavel"]
+          "selectValues": ["professor", "monitor", "student", "responsavel", "lider_escolar"]
         },
         {
           "name": "is_admin",
@@ -175,10 +175,10 @@
       "name": "agendamentos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
-        "view": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
+        "list": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
+        "view": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
         "create": "@request.auth.id != ''",
-        "update": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id",
+        "update": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
         "delete": "@request.auth.is_admin = true"
       },
       "fields": [
@@ -246,6 +246,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "local_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "locais"
         }
       ],
       "indexes": [
@@ -295,9 +302,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "create": "@request.auth.user_type = 'lider_escolar' || @request.auth.is_admin = true",
+        "update": "lider_id = @request.auth.id || @request.auth.is_admin = true",
+        "delete": "lider_id = @request.auth.id || @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -325,6 +332,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "lider_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
         }
       ],
       "indexes": []

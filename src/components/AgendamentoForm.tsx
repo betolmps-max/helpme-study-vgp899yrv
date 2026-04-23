@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useState, useEffect } from 'react'
+import { getLocaisList } from '@/services/locais'
 
 const formSchema = z.object({
   monitor_id: z.string({ required_error: 'Selecione um monitor.' }),
@@ -32,7 +34,8 @@ const formSchema = z.object({
   data_agendamento: z.date({ required_error: 'Selecione uma data.' }),
   horario_inicio: z.string().min(1, 'Horário de início é obrigatório.'),
   horario_fim: z.string().min(1, 'Horário de término é obrigatório.'),
-  local: z.string().min(1, 'Local é obrigatório.'),
+  local: z.string().optional(),
+  local_id: z.string().optional(),
 })
 
 interface AgendamentoFormProps {
@@ -42,6 +45,12 @@ interface AgendamentoFormProps {
 }
 
 export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoFormProps) {
+  const [locais, setLocais] = useState<any[]>([])
+
+  useEffect(() => {
+    getLocaisList().then(setLocais).catch(console.error)
+  }, [])
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,12 +58,13 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
       horario_inicio: '',
       horario_fim: '',
       local: '',
+      local_id: 'none',
     },
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await createAgendamento({
+      const data: any = {
         estudante_id: userId,
         monitor_id: values.monitor_id,
         assunto: values.assunto,
@@ -63,7 +73,13 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
         horario_fim: values.horario_fim,
         local: values.local,
         status: 'pendente',
-      })
+      }
+
+      if (values.local_id && values.local_id !== 'none') {
+        data.local_id = values.local_id
+      }
+
+      await createAgendamento(data)
       toast.success('Agendamento criado com sucesso!')
       form.reset()
       onSuccess()
@@ -187,10 +203,35 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
         </div>
         <FormField
           control={form.control}
+          name="local_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Local Físico (Opcional)</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um local físico" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum / Definir manual</SelectItem>
+                  {locais.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="local"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Local / Link</FormLabel>
+              <FormLabel>Localização / Link (Se não usar o local físico)</FormLabel>
               <FormControl>
                 <Input placeholder="Sala 101 ou Link do Meet" {...field} />
               </FormControl>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T18:10:38.092Z",
+  "generatedAt": "2026-04-23T18:31:39.251Z",
   "collections": [
     {
       "name": "users",
@@ -139,6 +139,12 @@
         },
         {
           "name": "valor_sessao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "taxa_uso_local",
           "type": "number",
           "required": false,
           "system": false

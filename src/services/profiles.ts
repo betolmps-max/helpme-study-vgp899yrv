@@ -8,6 +8,7 @@ export interface Profile {
   availability?: string
   max_participants?: number
   valor_sessao?: number
+  taxa_uso_local?: number
   created: string
   updated: string
 }

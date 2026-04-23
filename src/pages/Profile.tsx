@@ -25,6 +25,13 @@ import { Loader2, Plus, Trash2, Star } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { getDisciplinas, createDisciplina, type Disciplina } from '@/services/disciplinas'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import pb from '@/lib/pocketbase/client'
 
 const DAYS = [
@@ -52,6 +59,7 @@ export default function Profile() {
   const [profileId, setProfileId] = useState<string | null>(null)
   const [bio, setBio] = useState('')
   const [valorSessao, setValorSessao] = useState<number>(0)
+  const [taxaUsoLocal, setTaxaUsoLocal] = useState<number>(0)
 
   useEffect(() => {
     if (user)
@@ -103,6 +111,7 @@ export default function Profile() {
           setBio(profileRes.bio || '')
           setMaxParticipants(profileRes.max_participants || 1)
           setValorSessao(profileRes.valor_sessao || 0)
+          setTaxaUsoLocal(profileRes.taxa_uso_local || 0)
 
           const userSubjects = profileRes.subjects
             ? profileRes.subjects
@@ -183,6 +192,7 @@ export default function Profile() {
   }
 
   const isEducator = user.user_type === 'professor' || user.user_type === 'monitor'
+  const isLiderEscolar = user.user_type === 'lider_escolar'
 
   const handleSave = async () => {
     setSaving(true)
@@ -193,6 +203,7 @@ export default function Profile() {
         subjects: selectedSubjects.join(', '),
         availability: JSON.stringify(availability),
         ...(isEducator && { max_participants: maxParticipants, valor_sessao: valorSessao }),
+        ...(isLiderEscolar && { taxa_uso_local: taxaUsoLocal }),
       }
 
       if (profileId) {
@@ -315,6 +326,30 @@ export default function Profile() {
             </div>
             <Switch checked={notificacoesEmail} onCheckedChange={setNotificacoesEmail} />
           </div>
+
+          {isLiderEscolar && (
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Taxa de Uso do Local</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Defina a porcentagem que será cobrada pelas sessões de estudo realizadas em seus
+                locais.
+              </p>
+              <Select
+                value={taxaUsoLocal.toString()}
+                onValueChange={(val) => setTaxaUsoLocal(Number(val))}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Selecione a taxa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">0%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="10">10%</SelectItem>
+                  <SelectItem value="15">15%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label htmlFor="bio">About Me</Label>

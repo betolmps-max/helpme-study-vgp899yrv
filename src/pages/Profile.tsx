@@ -40,12 +40,32 @@ const DAYS = [
 type TimeSlot = { start: string; end: string }
 type AvailabilityMap = Record<string, TimeSlot[]>
 
+import { WalletDialogs } from '@/components/wallet/WalletDialogs'
+import { Coins } from 'lucide-react'
+import useRealtime from '@/hooks/use-realtime'
+
 export default function Profile() {
   const { user, loading: authLoading } = useAuth()
   const { toast } = useToast()
 
+  const [currentUser, setCurrentUser] = useState<any>(user)
   const [profileId, setProfileId] = useState<string | null>(null)
   const [bio, setBio] = useState('')
+  const [valorSessao, setValorSessao] = useState<number>(0)
+
+  useEffect(() => {
+    if (user)
+      pb.collection('users')
+        .getOne(user.id)
+        .then(setCurrentUser)
+        .catch(() => {})
+  }, [user])
+
+  useRealtime('users', (e) => {
+    if (e.action === 'update' && e.record.id === user?.id) {
+      setCurrentUser(e.record)
+    }
+  })
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [availability, setAvailability] = useState<AvailabilityMap>({})
   const [maxParticipants, setMaxParticipants] = useState<number>(1)
@@ -82,6 +102,7 @@ export default function Profile() {
           setProfileId(profileRes.id)
           setBio(profileRes.bio || '')
           setMaxParticipants(profileRes.max_participants || 1)
+          setValorSessao(profileRes.valor_sessao || 0)
 
           const userSubjects = profileRes.subjects
             ? profileRes.subjects
@@ -171,7 +192,7 @@ export default function Profile() {
         bio,
         subjects: selectedSubjects.join(', '),
         availability: JSON.stringify(availability),
-        ...(isEducator && { max_participants: maxParticipants }),
+        ...(isEducator && { max_participants: maxParticipants, valor_sessao: valorSessao }),
       }
 
       if (profileId) {
@@ -247,19 +268,40 @@ export default function Profile() {
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-3xl">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <Card className="flex-1 bg-primary/5 border-primary/20">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Coins className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">My Wallet (Helps)</p>
+                <h3 className="text-2xl font-bold">
+                  {currentUser?.saldo_helps?.toFixed(2) || '0.00'} HLP
+                </h3>
+              </div>
+            </div>
+            <WalletDialogs user={currentUser} />
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>My Profile</CardTitle>
           <CardDescription>
             Manage your personal information and academic preferences.
           </CardDescription>
-          {user && user.total_avaliacoes > 0 && (
+          {currentUser && currentUser.total_avaliacoes > 0 && (
             <div className="flex items-center mt-3 p-3 bg-muted/30 rounded-md w-fit border">
               <Star className="h-5 w-5 fill-yellow-500 text-yellow-500 mr-2" />
               <span className="font-semibold text-foreground text-lg mr-1">
-                {user.media_avaliacao?.toFixed(1) || '0.0'}
+                {currentUser.media_avaliacao?.toFixed(1) || '0.0'}
               </span>
-              <span className="text-muted-foreground">({user.total_avaliacoes} avaliações)</span>
+              <span className="text-muted-foreground">
+                ({currentUser.total_avaliacoes} avaliações)
+              </span>
             </div>
           )}
         </CardHeader>
@@ -338,6 +380,22 @@ export default function Profile() {
 
           {isEducator && (
             <>
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Preço da Sessão (Helps)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min="0"
+                    value={valorSessao}
+                    onChange={(e) => setValorSessao(Number(e.target.value))}
+                    className="w-32"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Helps por sessão (0 = Gratuito)
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <Label className="text-base font-semibold">Students per Session</Label>
                 <div className="flex flex-wrap gap-2">

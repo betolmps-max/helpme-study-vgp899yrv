@@ -27,6 +27,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useState, useEffect } from 'react'
 import { getLocaisList } from '@/services/locais'
+import { getProfileByUserId } from '@/services/profiles'
 
 const formSchema = z.object({
   monitor_id: z.string({ required_error: 'Selecione um monitor.' }),
@@ -46,6 +47,7 @@ interface AgendamentoFormProps {
 
 export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoFormProps) {
   const [locais, setLocais] = useState<any[]>([])
+  const [selectedMonitorProfile, setSelectedMonitorProfile] = useState<any>(null)
 
   useEffect(() => {
     getLocaisList().then(setLocais).catch(console.error)
@@ -61,6 +63,19 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
       local_id: 'none',
     },
   })
+
+  useEffect(() => {
+    const monId = form.watch('monitor_id')
+    if (monId && monId !== 'none') {
+      getProfileByUserId(monId)
+        .then(setSelectedMonitorProfile)
+        .catch(() => setSelectedMonitorProfile(null))
+    } else {
+      setSelectedMonitorProfile(null)
+    }
+  }, [form.watch('monitor_id')])
+
+  const valorSessao = selectedMonitorProfile?.valor_sessao || 0
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -118,6 +133,11 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
                 </SelectContent>
               </Select>
               <FormMessage />
+              {valorSessao > 0 && (
+                <div className="mt-2 p-3 bg-primary/10 text-primary-foreground rounded-md text-sm border border-primary/20">
+                  <p className="text-primary font-medium">Preço da sessão: {valorSessao} Helps</p>
+                </div>
+              )}
             </FormItem>
           )}
         />

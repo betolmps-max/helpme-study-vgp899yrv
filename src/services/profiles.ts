@@ -7,6 +7,7 @@ export interface Profile {
   subjects?: string
   availability?: string
   max_participants?: number
+  valor_sessao?: number
   created: string
   updated: string
 }

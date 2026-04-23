@@ -138,6 +138,7 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
   const subjects = profile.subjects ? profile.subjects.split(',').map((s: string) => s.trim()) : []
   const media = mentorUser?.media_avaliacao || 0
   const totalAvaliacoes = mentorUser?.total_avaliacoes || 0
+  const valorSessao = profile.valor_sessao || 0
 
   const activeSlots = useMemo(
     () => parseAvailabilitySlots(profile.availability),
@@ -215,7 +216,10 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
             {name}
           </CardTitle>
           <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
-            <span>{mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'}</span>
+            <span>
+              {mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'} •{' '}
+              {valorSessao > 0 ? `${valorSessao} Helps/sessão` : 'Gratuito'}
+            </span>
             {totalAvaliacoes > 0 && (
               <span className="flex items-center text-yellow-600 text-xs font-semibold">
                 <Star className="h-3.5 w-3.5 fill-current mr-1" />

@@ -30,9 +30,9 @@ export default function AgendamentosPage() {
     if (!user) return
     try {
       const [agendamentosData, monitorsData, avaliacoesData] = await Promise.all([
-        getAgendamentos(), 
+        getAgendamentos(),
         getMonitors(),
-        getAvaliacoesByUser(user.id)
+        getAvaliacoesByUser(user.id),
       ])
       setAgendamentos(agendamentosData)
       setMonitors(monitorsData)
@@ -175,8 +175,8 @@ export default function AgendamentosPage() {
                     >
                       <MessageCircle className="h-4 w-4" /> Chat
                     </Button>
-                    {agendamento.status === 'concluido' && (
-                      avaliacoes.some(a => a.agendamento_id === agendamento.id) ? (
+                    {agendamento.status === 'concluido' &&
+                      (avaliacoes.some((a) => a.agendamento_id === agendamento.id) ? (
                         <span className="text-sm text-muted-foreground flex items-center justify-center py-1 font-medium">
                           <CheckCircle2 className="h-4 w-4 mr-1 text-green-500" /> Avaliado
                         </span>
@@ -192,8 +192,7 @@ export default function AgendamentosPage() {
                         >
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Avaliar
                         </Button>
-                      )
-                    )}
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -201,12 +200,11 @@ export default function AgendamentosPage() {
           )}
         </div>
       </div>
-    </div>
 
-      <AvaliacaoDialog 
-        open={isAvaliarOpen} 
-        onOpenChange={setIsAvaliarOpen} 
-        agendamento={selectedAgendamento} 
+      <AvaliacaoDialog
+        open={isAvaliarOpen}
+        onOpenChange={setIsAvaliarOpen}
+        agendamento={selectedAgendamento}
         currentUser={user}
         onSuccess={loadData}
       />

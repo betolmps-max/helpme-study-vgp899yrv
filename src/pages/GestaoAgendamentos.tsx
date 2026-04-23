@@ -42,7 +42,7 @@ export default function GestaoAgendamentos() {
     try {
       const [data, avaliacoesData] = await Promise.all([
         getAgendamentosPorMonitor(user.id),
-        getAvaliacoesByUser(user.id)
+        getAvaliacoesByUser(user.id),
       ])
       setAgendamentos(data)
       setAvaliacoes(avaliacoesData)
@@ -89,7 +89,10 @@ export default function GestaoAgendamentos() {
     }
   }
 
-  const handleStatusChange = async (id: string, status: 'confirmado' | 'cancelado' | 'concluido') => {
+  const handleStatusChange = async (
+    id: string,
+    status: 'confirmado' | 'cancelado' | 'concluido',
+  ) => {
     try {
       await updateAgendamento(id, { status })
       toast.success(`Agendamento ${status} com sucesso!`)
@@ -161,7 +164,8 @@ export default function GestaoAgendamentos() {
                         ? 'bg-blue-500'
                         : 'bg-red-500'
                 }`}
-              />              <CardHeader className="pb-3">
+              />{' '}
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -179,7 +183,9 @@ export default function GestaoAgendamentos() {
                 <div className="flex items-center justify-between mb-4">
                   <Badge
                     className={
-                      agendamento.status === 'concluido' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200 border' : ''
+                      agendamento.status === 'concluido'
+                        ? 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200 border'
+                        : ''
                     }
                     variant={
                       agendamento.status === 'pendente'
@@ -190,7 +196,9 @@ export default function GestaoAgendamentos() {
                             ? 'outline'
                             : 'destructive'
                     }
-                  >                    {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)}
+                  >
+                    {' '}
+                    {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)}
                   </Badge>
                 </div>
 
@@ -212,7 +220,9 @@ export default function GestaoAgendamentos() {
                   </div>
                 )}
               </CardContent>
-              {(agendamento.status === 'pendente' || agendamento.status === 'confirmado' || agendamento.status === 'concluido') && (
+              {(agendamento.status === 'pendente' ||
+                agendamento.status === 'confirmado' ||
+                agendamento.status === 'concluido') && (
                 <CardFooter className="bg-slate-50 border-t flex-col gap-2 pt-4">
                   {agendamento.status === 'pendente' && (
                     <div className="flex gap-2 w-full">
@@ -256,26 +266,28 @@ export default function GestaoAgendamentos() {
                       </Button>
                     </div>
                   )}
-                  {agendamento.status === 'concluido' && !avaliacoes.some(a => a.agendamento_id === agendamento.id) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full gap-2 bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
-                      onClick={() => {
-                        setSelectedAgendamento(agendamento)
-                        setIsAvaliarOpen(true)
-                      }}
-                    >
-                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      Avaliar Estudante
-                    </Button>
-                  )}
-                  {agendamento.status === 'concluido' && avaliacoes.some(a => a.agendamento_id === agendamento.id) && (
-                    <div className="w-full text-center text-sm text-slate-500 flex items-center justify-center gap-1 font-medium">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Estudante Avaliado
-                    </div>
-                  )}
+                  {agendamento.status === 'concluido' &&
+                    !avaliacoes.some((a) => a.agendamento_id === agendamento.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full gap-2 bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100"
+                        onClick={() => {
+                          setSelectedAgendamento(agendamento)
+                          setIsAvaliarOpen(true)
+                        }}
+                      >
+                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                        Avaliar Estudante
+                      </Button>
+                    )}
+                  {agendamento.status === 'concluido' &&
+                    avaliacoes.some((a) => a.agendamento_id === agendamento.id) && (
+                      <div className="w-full text-center text-sm text-slate-500 flex items-center justify-center gap-1 font-medium">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        Estudante Avaliado
+                      </div>
+                    )}
                   <Button
                     size="sm"
                     variant="secondary"
@@ -285,16 +297,16 @@ export default function GestaoAgendamentos() {
                     <MessageCircle className="h-4 w-4" /> Mensagem
                   </Button>
                 </CardFooter>
-              )}            </Card>
+              )}{' '}
+            </Card>
           ))}
         </div>
       )}
-    </div>
 
-      <AvaliacaoDialog 
-        open={isAvaliarOpen} 
-        onOpenChange={setIsAvaliarOpen} 
-        agendamento={selectedAgendamento} 
+      <AvaliacaoDialog
+        open={isAvaliarOpen}
+        onOpenChange={setIsAvaliarOpen}
+        agendamento={selectedAgendamento}
         currentUser={user}
         onSuccess={loadAgendamentos}
       />

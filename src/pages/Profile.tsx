@@ -21,7 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Trash2, Star } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { getDisciplinas, createDisciplina, type Disciplina } from '@/services/disciplinas'
 import { Switch } from '@/components/ui/switch'
@@ -253,6 +253,15 @@ export default function Profile() {
           <CardDescription>
             Manage your personal information and academic preferences.
           </CardDescription>
+          {user && user.total_avaliacoes > 0 && (
+            <div className="flex items-center mt-3 p-3 bg-muted/30 rounded-md w-fit border">
+              <Star className="h-5 w-5 fill-yellow-500 text-yellow-500 mr-2" />
+              <span className="font-semibold text-foreground text-lg mr-1">
+                {user.media_avaliacao?.toFixed(1) || '0.0'}
+              </span>
+              <span className="text-muted-foreground">({user.total_avaliacoes} avaliações)</span>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 rounded-md border p-4 bg-muted/20">

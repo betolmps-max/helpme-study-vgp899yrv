@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T13:22:32.991Z",
+  "generatedAt": "2026-04-23T15:04:43.929Z",
   "collections": [
     {
       "name": "users",
@@ -54,6 +54,18 @@
         {
           "name": "notificacoes_email",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "media_avaliacao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_avaliacoes",
+          "type": "number",
           "required": false,
           "system": false
         }
@@ -237,7 +249,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["pendente", "confirmado", "cancelado"]
+          "selectValues": ["pendente", "confirmado", "cancelado", "concluido"]
         },
         {
           "name": "created",
@@ -519,6 +531,67 @@
           "name": "conteudo",
           "type": "text",
           "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "avaliacoes",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != '' && avaliador_id = @request.auth.id && (agendamento_id.estudante_id = @request.auth.id || agendamento_id.monitor_id = @request.auth.id)",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "agendamento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "agendamentos"
+        },
+        {
+          "name": "avaliador_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "avaliado_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "nota",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "comentario",
+          "type": "text",
+          "required": false,
           "system": false
         },
         {

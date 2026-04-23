@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
-import { CalendarIcon, Clock, BookOpen } from 'lucide-react'
+import { CalendarIcon, Clock, BookOpen, Star } from 'lucide-react'
 
 import { useToast } from '@/hooks/use-toast'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -136,6 +136,8 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
   const mentorUser = profile.expand?.user_id
   const name = mentorUser?.name || 'Usuário Sem Nome'
   const subjects = profile.subjects ? profile.subjects.split(',').map((s: string) => s.trim()) : []
+  const media = mentorUser?.media_avaliacao || 0
+  const totalAvaliacoes = mentorUser?.total_avaliacoes || 0
 
   const activeSlots = useMemo(
     () => parseAvailabilitySlots(profile.availability),
@@ -212,8 +214,17 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           <CardTitle className="text-lg line-clamp-1" title={name}>
             {name}
           </CardTitle>
-          <CardDescription className="capitalize font-medium text-primary/80">
-            {mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'}
+          <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
+            <span>{mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'}</span>
+            {totalAvaliacoes > 0 && (
+              <span className="flex items-center text-yellow-600 text-xs font-semibold">
+                <Star className="h-3.5 w-3.5 fill-current mr-1" />
+                {media.toFixed(1)}
+                <span className="text-muted-foreground font-normal ml-1">
+                  ({totalAvaliacoes} avaliações)
+                </span>
+              </span>
+            )}
           </CardDescription>
         </div>
       </CardHeader>

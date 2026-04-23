@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { format } from 'date-fns'
-import { CalendarIcon, Clock, MapPin, User, MessageCircle } from 'lucide-react'
+import { CalendarIcon, Clock, MapPin, User, MessageCircle, Star, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
@@ -9,22 +9,34 @@ import { getOrCreateConversa } from '@/services/chat'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getAgendamentos, Agendamento } from '@/services/agendamentos'
 import { getMonitors } from '@/services/users'
+import { getAvaliacoesByUser } from '@/services/avaliacoes'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { AgendamentoForm } from '@/components/AgendamentoForm'
+import { AvaliacaoDialog } from '@/components/AvaliacaoDialog'
 
 export default function AgendamentosPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
   const [monitors, setMonitors] = useState<any[]>([])
+  const [avaliacoes, setAvaliacoes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null)
+  const [isAvaliarOpen, setIsAvaliarOpen] = useState(false)
 
   const loadData = async () => {
+    if (!user) return
     try {
-      const [agendamentosData, monitorsData] = await Promise.all([getAgendamentos(), getMonitors()])
+      const [agendamentosData, monitorsData, avaliacoesData] = await Promise.all([
+        getAgendamentos(), 
+        getMonitors(),
+        getAvaliacoesByUser(user.id)
+      ])
       setAgendamentos(agendamentosData)
       setMonitors(monitorsData)
+      setAvaliacoes(avaliacoesData)
     } catch (error) {
       toast.error('Erro ao carregar dados.')
     } finally {
@@ -37,6 +49,9 @@ export default function AgendamentosPage() {
   }, [user])
 
   useRealtime('agendamentos', () => {
+    loadData()
+  })
+  useRealtime('avaliacoes', () => {
     loadData()
   })
 
@@ -67,6 +82,8 @@ export default function AgendamentosPage() {
         return 'bg-green-100 text-green-800 border-green-200'
       case 'cancelado':
         return 'bg-red-100 text-red-800 border-red-200'
+      case 'concluido':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
       default:
         return 'bg-slate-100 text-slate-800 border-slate-200'
     }
@@ -158,6 +175,25 @@ export default function AgendamentosPage() {
                     >
                       <MessageCircle className="h-4 w-4" /> Chat
                     </Button>
+                    {agendamento.status === 'concluido' && (
+                      avaliacoes.some(a => a.agendamento_id === agendamento.id) ? (
+                        <span className="text-sm text-muted-foreground flex items-center justify-center py-1 font-medium">
+                          <CheckCircle2 className="h-4 w-4 mr-1 text-green-500" /> Avaliado
+                        </span>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            setSelectedAgendamento(agendamento)
+                            setIsAvaliarOpen(true)
+                          }}
+                        >
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Avaliar
+                        </Button>
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -165,6 +201,15 @@ export default function AgendamentosPage() {
           )}
         </div>
       </div>
+    </div>
+
+      <AvaliacaoDialog 
+        open={isAvaliarOpen} 
+        onOpenChange={setIsAvaliarOpen} 
+        agendamento={selectedAgendamento} 
+        currentUser={user}
+        onSuccess={loadData}
+      />
     </div>
   )
 }

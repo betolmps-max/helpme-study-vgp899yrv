@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from 'react-router-dom'
-import { Shield, LogOut, Calendar, ClipboardList, Menu, Search } from 'lucide-react'
+import { Shield, LogOut, Calendar, ClipboardList, Menu, Search, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
@@ -88,6 +88,17 @@ export default function Layout() {
                   </Link>
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+              >
+                <Link to="/chat">
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Chat</span>
+                </Link>
+              </Button>
               {user.is_admin && (
                 <Button
                   variant="ghost"

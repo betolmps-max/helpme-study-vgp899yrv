@@ -13,9 +13,12 @@ import {
   Edit2,
   Plus,
   Building,
+  MessageCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { getOrCreateConversa } from '@/services/chat'
 import { getLocaisPorLider, createLocal } from '@/services/locais'
 import {
   getAgendamentosPorLider,
@@ -58,6 +61,7 @@ const editAgendamentoSchema = z.object({
 
 export default function GestaoLider() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
   const [locais, setLocais] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,6 +134,23 @@ export default function GestaoLider() {
       setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'cancelado' } : a)))
     } catch (err) {
       toast.error('Erro ao cancelar agendamento')
+    }
+  }
+
+  const handleOpenChat = async (agendamento: Agendamento) => {
+    if (!user?.id) return
+    try {
+      const participantes = [user.id]
+      if (agendamento.estudante_id && agendamento.estudante_id !== user.id)
+        participantes.push(agendamento.estudante_id)
+      if (agendamento.monitor_id && agendamento.monitor_id !== user.id)
+        participantes.push(agendamento.monitor_id)
+      const uniqueParticipantes = Array.from(new Set(participantes))
+
+      const conversa = await getOrCreateConversa(uniqueParticipantes, agendamento.id)
+      navigate(`/chat?conversaId=${conversa.id}`)
+    } catch (err) {
+      toast.error('Erro ao iniciar chat')
     }
   }
 
@@ -294,6 +315,14 @@ export default function GestaoLider() {
                         onClick={() => handleCancelAgendamento(agendamento.id)}
                       >
                         <XCircle className="h-4 w-4" /> Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="w-full gap-2 mt-2"
+                        onClick={() => handleOpenChat(agendamento)}
+                      >
+                        <MessageCircle className="h-4 w-4" /> Mensagem
                       </Button>
                     </CardFooter>
                   )}

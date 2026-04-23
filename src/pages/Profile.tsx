@@ -24,6 +24,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { getDisciplinas, createDisciplina, type Disciplina } from '@/services/disciplinas'
+import { Switch } from '@/components/ui/switch'
+import pb from '@/lib/pocketbase/client'
 
 const DAYS = [
   { id: 'mon', label: 'Monday' },
@@ -47,6 +49,7 @@ export default function Profile() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [availability, setAvailability] = useState<AvailabilityMap>({})
   const [maxParticipants, setMaxParticipants] = useState<number>(1)
+  const [notificacoesEmail, setNotificacoesEmail] = useState<boolean>(true)
 
   const [subjectsList, setSubjectsList] = useState<Disciplina[]>([])
   const [newSubject, setNewSubject] = useState('')
@@ -72,6 +75,8 @@ export default function Profile() {
         ])
 
         setSubjectsList(disciplinasRes)
+
+        setNotificacoesEmail(user.notificacoes_email !== false)
 
         if (profileRes) {
           setProfileId(profileRes.id)
@@ -176,6 +181,10 @@ export default function Profile() {
         setProfileId(newProfile.id)
       }
 
+      if (user.notificacoes_email !== notificacoesEmail) {
+        await pb.collection('users').update(user.id, { notificacoes_email: notificacoesEmail })
+      }
+
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been saved successfully.',
@@ -246,6 +255,16 @@ export default function Profile() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 rounded-md border p-4 bg-muted/20">
+            <div className="space-y-0.5">
+              <Label className="text-base">Notificações por E-mail</Label>
+              <p className="text-sm text-muted-foreground">
+                Receba um alerta por e-mail quando tiver novas mensagens no chat.
+              </p>
+            </div>
+            <Switch checked={notificacoesEmail} onCheckedChange={setNotificacoesEmail} />
+          </div>
+
           <div className="space-y-3">
             <Label htmlFor="bio">About Me</Label>
             <Textarea

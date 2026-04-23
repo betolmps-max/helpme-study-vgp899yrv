@@ -13,6 +13,7 @@ import GestaoLider from './pages/GestaoLider'
 import Profile from './pages/Profile'
 import BuscarMonitores from './pages/BuscarMonitores'
 import Layout from './components/Layout'
+import Chat from './pages/Chat'
 import { AuthProvider } from './hooks/use-auth'
 import { AdminRoute } from './components/AdminRoute'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/gestao-lider" element={<GestaoLider />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/monitores/busca" element={<BuscarMonitores />} />
+            <Route path="/chat" element={<Chat />} />
 
             <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboard />} />

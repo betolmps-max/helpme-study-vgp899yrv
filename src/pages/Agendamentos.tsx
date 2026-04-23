@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { format } from 'date-fns'
-import { CalendarIcon, Clock, MapPin, User } from 'lucide-react'
+import { CalendarIcon, Clock, MapPin, User, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
+import { getOrCreateConversa } from '@/services/chat'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getAgendamentos, Agendamento } from '@/services/agendamentos'
 import { getMonitors } from '@/services/users'
@@ -13,6 +15,7 @@ import { AgendamentoForm } from '@/components/AgendamentoForm'
 
 export default function AgendamentosPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
   const [monitors, setMonitors] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,6 +41,23 @@ export default function AgendamentosPage() {
   })
 
   if (!user) return <Navigate to="/login" replace />
+
+  const handleOpenChat = async (agendamento: Agendamento) => {
+    if (!user?.id) return
+    try {
+      const participantes = [user.id]
+      if (agendamento.estudante_id && agendamento.estudante_id !== user.id)
+        participantes.push(agendamento.estudante_id)
+      if (agendamento.monitor_id && agendamento.monitor_id !== user.id)
+        participantes.push(agendamento.monitor_id)
+      const uniqueParticipantes = Array.from(new Set(participantes))
+
+      const conversa = await getOrCreateConversa(uniqueParticipantes, agendamento.id)
+      navigate(`/chat?conversaId=${conversa.id}`)
+    } catch (err) {
+      toast.error('Erro ao iniciar chat')
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,6 +148,16 @@ export default function AgendamentosPage() {
                         </span>
                       </div>
                     </div>
+                  </div>
+                  <div className="flex flex-col sm:justify-end sm:border-l sm:pl-4 mt-4 sm:mt-0 gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => handleOpenChat(agendamento)}
+                    >
+                      <MessageCircle className="h-4 w-4" /> Chat
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

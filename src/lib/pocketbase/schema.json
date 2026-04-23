@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T13:10:06.177Z",
+  "generatedAt": "2026-04-23T13:22:32.991Z",
   "collections": [
     {
       "name": "users",
@@ -47,6 +47,12 @@
         },
         {
           "name": "is_admin",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notificacoes_email",
           "type": "bool",
           "required": false,
           "system": false
@@ -424,6 +430,96 @@
           "required": true,
           "system": false,
           "selectValues": ["pendente", "aceito", "recusado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "conversas",
+      "type": "base",
+      "apiRules": {
+        "list": "participantes ~ @request.auth.id",
+        "view": "participantes ~ @request.auth.id",
+        "create": "@request.auth.id != ''",
+        "update": "participantes ~ @request.auth.id",
+        "delete": "participantes ~ @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "participantes",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "agendamento_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "agendamentos"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "mensagens",
+      "type": "base",
+      "apiRules": {
+        "list": "conversa_id.participantes ~ @request.auth.id",
+        "view": "conversa_id.participantes ~ @request.auth.id",
+        "create": "conversa_id.participantes ~ @request.auth.id",
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "conversa_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "conversas"
+        },
+        {
+          "name": "remetente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "conteudo",
+          "type": "text",
+          "required": true,
+          "system": false
         },
         {
           "name": "created",

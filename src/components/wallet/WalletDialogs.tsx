@@ -14,6 +14,7 @@ import { depositHelps, withdrawHelps } from '@/services/wallet'
 import { toast } from 'sonner'
 import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark, Info } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { TransactionStatement } from './TransactionStatement'
 
 export function WalletDialogs({ user }: { user: any }) {
   const [depositOpen, setDepositOpen] = useState(false)
@@ -58,6 +59,7 @@ export function WalletDialogs({ user }: { user: any }) {
 
   return (
     <div className="flex gap-2">
+      <TransactionStatement />
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
         <DialogTrigger asChild>
           <Button variant="default">

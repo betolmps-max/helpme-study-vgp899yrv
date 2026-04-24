@@ -27,6 +27,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AvaliacaoDialog } from '@/components/AvaliacaoDialog'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { Calculator } from 'lucide-react'
 
 export default function GestaoAgendamentos() {
   const { user } = useAuth()
@@ -217,6 +219,71 @@ export default function GestaoAgendamentos() {
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-slate-400" />
                     {agendamento.local}
+                  </div>
+                )}
+
+                {agendamento.valor_pago !== undefined && agendamento.valor_pago > 0 && (
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                    <div className="flex items-center gap-2 font-medium text-slate-700">
+                      <span className="text-muted-foreground text-xs">Valor da Sessão:</span>
+                      {agendamento.valor_pago.toFixed(2)} HLP
+                    </div>
+
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Calculator className="h-5 w-5 text-primary" />
+                            <h4 className="font-semibold text-sm">Simulador de Ganhos Líquidos</h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            O valor final recebido depende da avaliação do estudante.
+                            <br />
+                            <strong className="text-foreground">
+                              Taxa do sistema de 2% aplicada para avaliações acima de 1 estrela.
+                            </strong>
+                          </p>
+
+                          <div className="space-y-2 text-sm border-t pt-2 mt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" /> 4-5
+                                Estrelas
+                              </span>
+                              <span className="font-medium text-green-600">
+                                {(agendamento.valor_pago * 0.98).toFixed(2)} HLP
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" /> 2-3
+                                Estrelas
+                              </span>
+                              <span className="font-medium text-amber-600">
+                                {(agendamento.valor_pago * 0.5 * 0.98).toFixed(2)} HLP
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-slate-300 text-slate-300" /> 1 Estrela
+                              </span>
+                              <span className="font-medium text-red-600">
+                                {(agendamento.valor_pago * 0.1).toFixed(2)} HLP
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
                   </div>
                 )}
               </CardContent>

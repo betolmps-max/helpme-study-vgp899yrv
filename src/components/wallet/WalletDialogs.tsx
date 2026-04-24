@@ -67,12 +67,12 @@ export function WalletDialogs({ user }: { user: any }) {
           <DialogHeader>
             <DialogTitle>Adicionar Fundos</DialogTitle>
             <DialogDescription>
-              Simule a compra de Helps via Cartão ou PIX. (1 Help = 1 BRL)
+              Simule a compra de Helps via Cartão ou PIX. (1 Real = 10 Helps)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Valor (R$ / Helps)</Label>
+              <Label>Valor (R$)</Label>
               <Input
                 type="number"
                 min="1"
@@ -80,6 +80,11 @@ export function WalletDialogs({ user }: { user: any }) {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="100"
               />
+              {amount && Number(amount) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Você receberá: {Number(amount) * 10} Helps
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1">
@@ -107,7 +112,7 @@ export function WalletDialogs({ user }: { user: any }) {
           <DialogHeader>
             <DialogTitle>Resgatar Helps</DialogTitle>
             <DialogDescription>
-              Solicite transferência do seu saldo para sua conta bancária.
+              Solicite transferência do seu saldo para sua conta bancária. (10 Helps = 1 Real)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -120,9 +125,14 @@ export function WalletDialogs({ user }: { user: any }) {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Ex: 50"
               />
-              <p className="text-xs text-muted-foreground">
-                Saldo disponível: {user?.saldo_helps?.toFixed(2) || '0.00'} HLP
-              </p>
+              <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
+                <p>Saldo disponível: {user?.saldo_helps?.toFixed(2) || '0.00'} HLP</p>
+                {amount && Number(amount) > 0 && (
+                  <p className="font-medium text-primary">
+                    Equivalente a: R$ {(Number(amount) / 10).toFixed(2)}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Detalhes da Conta ou Chave PIX</Label>

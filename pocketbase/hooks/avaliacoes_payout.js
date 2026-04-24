@@ -23,9 +23,9 @@ onRecordAfterCreateSuccess((e) => {
       let valorEstudante = 0
 
       if (nota >= 4) {
-        valorMonitor = valorPago * 0.95
+        valorMonitor = valorPago * 0.98
       } else if (nota >= 2) {
-        valorMonitor = valorPago * 0.5 * 0.95
+        valorMonitor = valorPago * 0.5 * 0.98
         valorEstudante = valorPago * 0.5
       } else {
         valorMonitor = valorPago * 0.1

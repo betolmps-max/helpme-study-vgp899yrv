@@ -426,7 +426,7 @@ export default function Profile() {
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">
-                    Helps por sessão (0 = Gratuito)
+                    Helps por sessão (0 = Gratuito) | 1 Real = 10 Helps
                   </span>
                 </div>
               </div>

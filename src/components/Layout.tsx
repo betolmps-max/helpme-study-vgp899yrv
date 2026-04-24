@@ -1,9 +1,36 @@
 import { Outlet, useLocation, Link } from 'react-router-dom'
-import { Shield, LogOut, Calendar, ClipboardList, Menu, Search, MessageCircle } from 'lucide-react'
+import {
+  Shield,
+  LogOut,
+  Calendar,
+  ClipboardList,
+  Menu,
+  Search,
+  MessageCircle,
+  User as UserIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import pb from '@/lib/pocketbase/client'
+
+function getInitials(name: string) {
+  if (!name) return '?'
+  const parts = name.split(' ').filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
 
 export default function Layout() {
   const location = useLocation()
@@ -112,17 +139,53 @@ export default function Layout() {
                   </Link>
                 </Button>
               )}
-              <Link
-                to="/perfil"
-                className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors max-w-[80px] sm:max-w-[150px] md:max-w-[200px] truncate"
-                title={user.name || user.email}
-              >
-                {user.name || user.email}
-              </Link>
-              <Button variant="outline" size="sm" onClick={signOut} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline-block">Logout</span>
-              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full ml-2 ring-1 ring-slate-200 hover:ring-indigo-300 transition-all"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage
+                        src={user.avatar ? pb.files.getURL(user, user.avatar) : ''}
+                        alt={user.name || user.email}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                        {getInitials(user.name || user.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none truncate">
+                        {user.name || 'Usuário'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/perfil" className="w-full cursor-pointer flex items-center">
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Editar Perfil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={signOut}
+                    className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </header>

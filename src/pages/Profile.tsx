@@ -17,11 +17,14 @@ import {
   CardFooter,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useRef } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Plus, Trash2, Star } from 'lucide-react'
+import { Loader2, Plus, Trash2, Star, Camera, Upload } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { updateUserAvatar } from '@/services/users'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { getDisciplinas, createDisciplina, type Disciplina } from '@/services/disciplinas'
 import { Switch } from '@/components/ui/switch'
@@ -86,6 +89,9 @@ export default function Profile() {
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!user) {
@@ -278,6 +284,36 @@ export default function Profile() {
     })
   }
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingAvatar(true)
+    try {
+      await updateUserAvatar(user.id, file)
+      await pb.collection('users').authRefresh()
+      toast({ description: 'Foto de perfil atualizada com sucesso!' })
+    } catch (err) {
+      toast({
+        title: 'Erro ao atualizar foto',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      })
+    } finally {
+      setUploadingAvatar(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
+    }
+  }
+
+  const getInitials = (name: string) => {
+    if (!name) return '?'
+    const parts = name.split(' ').filter(Boolean)
+    if (parts.length === 0) return '?'
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase()
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+
   return (
     <div className="container mx-auto py-10 px-4 max-w-3xl">
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -318,6 +354,72 @@ export default function Profile() {
           )}
         </CardHeader>
         <CardContent className="space-y-8">
+          <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6 border-b pb-6">
+            <div className="relative group shrink-0">
+              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background shadow-md">
+                <AvatarImage
+                  src={currentUser?.avatar ? pb.files.getURL(currentUser, currentUser.avatar) : ''}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl sm:text-3xl font-semibold">
+                  {getInitials(currentUser?.name || currentUser?.email)}
+                </AvatarFallback>
+              </Avatar>
+              {uploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+            <div className="space-y-3 text-center sm:text-left flex-1 w-full">
+              <div>
+                <h3 className="text-xl font-semibold leading-none">
+                  {currentUser?.name || 'Usuário'}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">{currentUser?.email}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-primary mt-2">
+                  {currentUser?.user_type}
+                </p>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  ref={cameraInputRef}
+                  onChange={handleAvatarChange}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Galeria
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Câmera
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 rounded-md border p-4 bg-muted/20">
             <div className="space-y-0.5">
               <Label className="text-base">Notificações por E-mail</Label>

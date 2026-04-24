@@ -18,3 +18,9 @@ export const getMonitors = () => {
     sort: 'name',
   })
 }
+
+export const updateUserAvatar = (id: string, file: File) => {
+  const formData = new FormData()
+  formData.append('avatar', file)
+  return pb.collection('users').update(id, formData)
+}

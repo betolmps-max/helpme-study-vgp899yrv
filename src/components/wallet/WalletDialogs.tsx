@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { depositHelps, withdrawHelps } from '@/services/wallet'
 import { toast } from 'sonner'
-import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark } from 'lucide-react'
+import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark, Info } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export function WalletDialogs({ user }: { user: any }) {
   const [depositOpen, setDepositOpen] = useState(false)
@@ -71,6 +72,16 @@ export function WalletDialogs({ user }: { user: any }) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <Alert className="bg-primary/5 text-primary border-primary/20">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertTitle className="text-primary font-semibold">
+                Conversão: R$ 1,00 = 10 Helps
+              </AlertTitle>
+              <AlertDescription className="text-primary/90 text-sm mt-1">
+                Exemplo: Ao adicionar <strong>R$ 10,00</strong>, você receberá{' '}
+                <strong>100 Helps</strong>.
+              </AlertDescription>
+            </Alert>
             <div className="space-y-2">
               <Label>Valor (R$)</Label>
               <Input

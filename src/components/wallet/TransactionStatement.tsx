@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { FileText, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 const TIPO_LABELS: Record<string, string> = {
   deposito: 'Depósito',
@@ -29,6 +30,7 @@ const isPositive = (tipo: string) => {
 }
 
 export function TransactionStatement() {
+  const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transacao[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -89,7 +91,11 @@ export function TransactionStatement() {
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-sm">{TIPO_LABELS[tx.tipo] || tx.tipo}</p>
+                          <p className="font-medium text-sm">
+                            {user?.user_type === 'lider_escolar' && tx.tipo === 'recebimento_sessao'
+                              ? 'Comissão de Uso do Local'
+                              : TIPO_LABELS[tx.tipo] || tx.tipo}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {format(parseISO(tx.created), "dd/MM/yyyy 'às' HH:mm")}
                           </p>

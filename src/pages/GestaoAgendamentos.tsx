@@ -21,6 +21,7 @@ import {
   type Agendamento,
 } from '@/services/agendamentos'
 import { getAvaliacoesByUser } from '@/services/avaliacoes'
+import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
@@ -38,6 +39,7 @@ export default function GestaoAgendamentos() {
   const [loading, setLoading] = useState(true)
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null)
   const [isAvaliarOpen, setIsAvaliarOpen] = useState(false)
+  const [locaisTaxas, setLocaisTaxas] = useState<Record<string, number>>({})
 
   const loadAgendamentos = async () => {
     if (!user?.id) return
@@ -48,6 +50,37 @@ export default function GestaoAgendamentos() {
       ])
       setAgendamentos(data)
       setAvaliacoes(avaliacoesData)
+
+      const localIds = Array.from(
+        new Set(data.map((a: any) => a.local_id).filter(Boolean)),
+      ) as string[]
+      if (localIds.length > 0) {
+        const locaisFilters = localIds.map((id) => `id="${id}"`).join(' || ')
+        const locaisData = await pb.collection('locais').getFullList({ filter: locaisFilters })
+
+        const liderIds = Array.from(
+          new Set(locaisData.map((l) => l.lider_id).filter(Boolean)),
+        ) as string[]
+        if (liderIds.length > 0) {
+          const profileFilters = liderIds.map((id) => `user_id="${id}"`).join(' || ')
+          const profilesData = await pb
+            .collection('profiles')
+            .getFullList({ filter: profileFilters })
+
+          const leaderTaxas: Record<string, number> = {}
+          profilesData.forEach((p) => {
+            if (p.user_id) leaderTaxas[p.user_id] = p.taxa_uso_local || 0
+          })
+
+          const taxas: Record<string, number> = {}
+          locaisData.forEach((l) => {
+            if (l.lider_id && leaderTaxas[l.lider_id] !== undefined) {
+              taxas[l.id] = leaderTaxas[l.lider_id]
+            }
+          })
+          setLocaisTaxas(taxas)
+        }
+      }
     } catch (error) {
       toast.error('Erro ao carregar agendamentos')
     } finally {
@@ -249,7 +282,14 @@ export default function GestaoAgendamentos() {
                             O valor final recebido depende da avaliação do estudante.
                             <br />
                             <strong className="text-foreground">
-                              Taxa do sistema de 2% aplicada para avaliações acima de 1 estrela.
+                              Taxa do sistema: 2%.
+                              {(agendamento as any).local_id &&
+                                locaisTaxas[(agendamento as any).local_id] !== undefined && (
+                                  <>
+                                    {' '}
+                                    Taxa do Local: {locaisTaxas[(agendamento as any).local_id]}%.
+                                  </>
+                                )}
                             </strong>
                           </p>
 
@@ -260,7 +300,14 @@ export default function GestaoAgendamentos() {
                                 Estrelas
                               </span>
                               <span className="font-medium text-green-600">
-                                {(agendamento.valor_pago * 0.98).toFixed(2)} HLP
+                                {Math.max(
+                                  0,
+                                  agendamento.valor_pago -
+                                    agendamento.valor_pago * 0.02 -
+                                    agendamento.valor_pago *
+                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                ).toFixed(2)}{' '}
+                                HLP
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -269,7 +316,14 @@ export default function GestaoAgendamentos() {
                                 Estrelas
                               </span>
                               <span className="font-medium text-amber-600">
-                                {(agendamento.valor_pago * 0.5 * 0.98).toFixed(2)} HLP
+                                {Math.max(
+                                  0,
+                                  agendamento.valor_pago * 0.5 -
+                                    agendamento.valor_pago * 0.02 -
+                                    agendamento.valor_pago *
+                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                ).toFixed(2)}{' '}
+                                HLP
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -277,7 +331,15 @@ export default function GestaoAgendamentos() {
                                 <Star className="h-3 w-3 fill-slate-300 text-slate-300" /> 1 Estrela
                               </span>
                               <span className="font-medium text-red-600">
-                                {(agendamento.valor_pago * 0.1).toFixed(2)} HLP
+                                {Math.max(
+                                  0,
+                                  agendamento.valor_pago -
+                                    agendamento.valor_pago * 0.9 -
+                                    agendamento.valor_pago * 0.02 -
+                                    agendamento.valor_pago *
+                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                ).toFixed(2)}{' '}
+                                HLP
                               </span>
                             </div>
                           </div>

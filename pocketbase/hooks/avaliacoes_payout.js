@@ -19,18 +19,41 @@ onRecordAfterCreateSuccess((e) => {
 
       const monitorId = agendamento.get('monitor_id')
       const estudanteId = agendamento.get('estudante_id')
+      const localId = agendamento.get('local_id')
+
+      let taxaLocal = 0
+      let liderId = null
+
+      if (localId) {
+        try {
+          const local = $app.findRecordById('locais', localId)
+          liderId = local.get('lider_id')
+          if (liderId) {
+            const profile = $app.findFirstRecordByData('profiles', 'user_id', liderId)
+            taxaLocal = profile.getFloat('taxa_uso_local') || 0
+          }
+        } catch (err) {
+          console.log('Error fetching local/leader details:', err)
+        }
+      }
+
+      const systemFee = valorPago * 0.02
+      const leaderFee = valorPago * (taxaLocal / 100)
+
       let valorMonitor = 0
       let valorEstudante = 0
 
       if (nota >= 4) {
-        valorMonitor = valorPago * 0.98
+        valorMonitor = valorPago - systemFee - leaderFee
       } else if (nota >= 2) {
-        valorMonitor = valorPago * 0.5 * 0.98
         valorEstudante = valorPago * 0.5
+        valorMonitor = valorPago - valorEstudante - systemFee - leaderFee
       } else {
-        valorMonitor = valorPago * 0.1
         valorEstudante = valorPago * 0.9
+        valorMonitor = valorPago - valorEstudante - systemFee - leaderFee
       }
+
+      if (valorMonitor < 0) valorMonitor = 0
 
       $app.runInTransaction((txApp) => {
         const txCol = txApp.findCollectionByNameOrId('transacoes')
@@ -61,6 +84,20 @@ onRecordAfterCreateSuccess((e) => {
           txE.set('valor', valorEstudante)
           txE.set('status', 'concluido')
           txApp.save(txE)
+        }
+
+        if (leaderFee > 0 && liderId) {
+          const lider = txApp.findRecordById('users', liderId)
+          lider.set('saldo_helps', (lider.getFloat('saldo_helps') || 0) + leaderFee)
+          txApp.save(lider)
+
+          const txL = new Record(txCol)
+          txL.set('user_id', liderId)
+          txL.set('agendamento_id', agendamentoId)
+          txL.set('tipo', 'recebimento_sessao')
+          txL.set('valor', leaderFee)
+          txL.set('status', 'concluido')
+          txApp.save(txL)
         }
       })
     }

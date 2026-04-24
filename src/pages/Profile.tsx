@@ -25,6 +25,7 @@ import { Loader2, Plus, Trash2, Star } from 'lucide-react'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { getDisciplinas, createDisciplina, type Disciplina } from '@/services/disciplinas'
 import { Switch } from '@/components/ui/switch'
+import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -329,25 +330,22 @@ export default function Profile() {
 
           {isLiderEscolar && (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Taxa de Uso do Local</Label>
+              <Label className="text-base font-semibold">Comissão de Uso do Local (%)</Label>
               <p className="text-sm text-muted-foreground mb-2">
-                Defina a porcentagem que será cobrada pelas sessões de estudo realizadas em seus
-                locais.
+                Defina a porcentagem (0% a 5%) que você receberá por cada sessão realizada em seus
+                locais cadastrados.
               </p>
-              <Select
-                value={taxaUsoLocal.toString()}
-                onValueChange={(val) => setTaxaUsoLocal(Number(val))}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Selecione a taxa" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">0%</SelectItem>
-                  <SelectItem value="5">5%</SelectItem>
-                  <SelectItem value="10">10%</SelectItem>
-                  <SelectItem value="15">15%</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-4">
+                <Slider
+                  min={0}
+                  max={5}
+                  step={0.5}
+                  value={[taxaUsoLocal]}
+                  onValueChange={(vals) => setTaxaUsoLocal(vals[0])}
+                  className="w-48"
+                />
+                <span className="text-sm font-medium text-foreground w-12">{taxaUsoLocal}%</span>
+              </div>
             </div>
           )}
 

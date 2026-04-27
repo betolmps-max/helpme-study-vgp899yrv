@@ -86,9 +86,10 @@ export default function BuscarMonitores() {
     }
 
     if (filterName.trim() !== '') {
-      const query = filterName.toLowerCase()
+      const query = filterName.trim().toLowerCase()
       const name = (p.expand?.user_id?.name || '').toLowerCase()
-      if (!name.includes(query)) {
+      const subjectStr = (p.subjects || '').toLowerCase()
+      if (!name.includes(query) && !subjectStr.includes(query)) {
         return false
       }
     }
@@ -110,7 +111,7 @@ export default function BuscarMonitores() {
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Nome do monitor..."
+              placeholder="Buscar por nome ou matéria..."
               value={filterName}
               onChange={(e) => setFilterName(e.target.value)}
               className="pl-9"
@@ -158,7 +159,7 @@ export default function BuscarMonitores() {
       ) : filteredProfiles.length === 0 ? (
         <div className="text-center py-20 border rounded-lg bg-muted/20">
           <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-          <h3 className="text-lg font-medium">Nenhum monitor encontrado</h3>
+          <h3 className="text-lg font-medium">Nenhum monitor encontrado para esta busca</h3>
           <p className="text-muted-foreground mt-1">Tente buscar com outros filtros ou limpe-os.</p>
           {(filterSubject !== 'all' || filterLocal !== 'all' || filterName !== '') && (
             <Button

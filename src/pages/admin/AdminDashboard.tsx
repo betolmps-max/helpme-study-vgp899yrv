@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
 
   const loadData = async () => {
     try {
@@ -52,10 +53,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (loading) return
+    setIsSearching(true)
     const delayDebounceFn = setTimeout(() => {
       getStaffUsers(searchTerm)
         .then(setStaffUsers)
         .catch(() => {})
+        .finally(() => setIsSearching(false))
     }, 300)
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, loading])
@@ -141,59 +144,16 @@ export default function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staffUsers.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage
-                            src={u.avatar ? pb.files.getURL(u, u.avatar) : ''}
-                            alt={u.name}
-                          />
-                          <AvatarFallback>
-                            {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-slate-900">{u.name || 'N/A'}</span>
+                {isSearching ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      <div className="flex justify-center items-center text-slate-500">
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Searching...
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-600">{u.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {u.user_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {u.is_admin ? (
-                        <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 border-indigo-200">
-                          Admin
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">User</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant={u.is_admin ? 'destructive' : 'default'}
-                        size="sm"
-                        disabled={u.id === currentUser?.id}
-                        onClick={() => handleToggleAdmin(u.id, u.is_admin)}
-                        className="w-[140px]"
-                      >
-                        {u.is_admin ? (
-                          <>
-                            <ShieldOff className="mr-2 h-4 w-4" /> Remove Admin
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="mr-2 h-4 w-4" /> Make Admin
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
                   </TableRow>
-                ))}
-                {staffUsers.length === 0 && (
+                ) : staffUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center text-slate-500">
                       {searchTerm
@@ -201,6 +161,59 @@ export default function AdminDashboard() {
                         : 'No professors or monitors found.'}
                     </TableCell>
                   </TableRow>
+                ) : (
+                  staffUsers.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage
+                              src={u.avatar ? pb.files.getURL(u, u.avatar) : ''}
+                              alt={u.name}
+                            />
+                            <AvatarFallback>
+                              {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium text-slate-900">{u.name || 'N/A'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-600">{u.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {u.user_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {u.is_admin ? (
+                          <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 border-indigo-200">
+                            Admin
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">User</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant={u.is_admin ? 'destructive' : 'default'}
+                          size="sm"
+                          disabled={u.id === currentUser?.id}
+                          onClick={() => handleToggleAdmin(u.id, u.is_admin)}
+                          className="w-[140px]"
+                        >
+                          {u.is_admin ? (
+                            <>
+                              <ShieldOff className="mr-2 h-4 w-4" /> Remove Admin
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="mr-2 h-4 w-4" /> Make Admin
+                            </>
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>

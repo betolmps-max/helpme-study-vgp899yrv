@@ -529,7 +529,8 @@ export default function Profile() {
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">
-                    Reais por sessão (0 = Gratuito)
+                    Reais por sessão (0 = Gratuito). O aluno verá o valor final com +5% de taxa da
+                    plataforma.
                   </span>
                 </div>
               </div>

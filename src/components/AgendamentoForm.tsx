@@ -88,6 +88,7 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
         horario_fim: values.horario_fim,
         local: values.local,
         status: 'pendente',
+        valor_pago: valorSessao > 0 ? Number((valorSessao * 1.05).toFixed(2)) : 0,
       }
 
       if (values.local_id && values.local_id !== 'none') {
@@ -135,11 +136,19 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
               <FormMessage />
               {valorSessao > 0 && (
                 <div className="mt-2 p-3 bg-primary/10 text-primary-foreground rounded-md text-sm border border-primary/20">
-                  <p className="text-primary font-medium">
-                    Preço da sessão:{' '}
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                      valorSessao,
-                    )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-primary font-medium">Total a pagar:</span>
+                    <div className="text-right">
+                      <p className="font-bold text-primary">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(Number((valorSessao * 1.05).toFixed(2)))}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-primary/70 mt-1 text-right">
+                    Inclui 5% de taxa da plataforma
                   </p>
                 </div>
               )}

@@ -184,6 +184,7 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
         horario_fim: data.horario_fim,
         local: data.local,
         status: 'pendente',
+        valor_pago: valorSessao > 0 ? Number((valorSessao * 1.05).toFixed(2)) : 0,
       })
       setOpen(false)
       form.reset()
@@ -241,10 +242,15 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
             </div>
             <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
               {(mentorUser?.user_type === 'professor' || mentorUser?.user_type === 'monitor') && (
-                <span>
+                <span className="flex items-center gap-1">
                   {valorSessao > 0
-                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorSessao)}/sessão`
+                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number((valorSessao * 1.05).toFixed(2)))}/sessão`
                     : 'Gratuito'}
+                  {valorSessao > 0 && (
+                    <span className="text-[10px] text-muted-foreground font-normal">
+                      (inclui 5% de taxa)
+                    </span>
+                  )}
                 </span>
               )}
               {totalAvaliacoes > 0 && (
@@ -531,7 +537,23 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                       </FormItem>
                     )}
                   />
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-3">
+                    {valorSessao > 0 && (
+                      <div className="flex justify-between items-center p-3 bg-muted/50 rounded-md border">
+                        <span className="text-sm font-medium">Total a pagar:</span>
+                        <div className="text-right">
+                          <p className="font-bold text-primary">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            }).format(Number((valorSessao * 1.05).toFixed(2)))}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Inclui 5% de taxa da plataforma
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <Button type="submit" className="w-full">
                       Confirmar Agendamento
                     </Button>

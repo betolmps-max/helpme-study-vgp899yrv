@@ -102,19 +102,17 @@ export default function Layout() {
                   </Link>
                 </Button>
               )}
-              {user.user_type === 'student' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                >
-                  <Link to="/monitores/busca">
-                    <Search className="h-4 w-4" />
-                    <span className="hidden sm:inline-block">Buscar Monitores</span>
-                  </Link>
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+              >
+                <Link to="/monitores/busca">
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Comunidade</span>
+                </Link>
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

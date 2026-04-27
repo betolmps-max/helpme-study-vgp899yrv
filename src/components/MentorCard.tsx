@@ -212,45 +212,73 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           )}
         </Avatar>
         <div className="flex flex-col">
-          <CardTitle className="text-lg line-clamp-1" title={name}>
-            {name}
-          </CardTitle>
-          <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
-            <span>
-              {mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'} •{' '}
-              {valorSessao > 0
-                ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorSessao)}/sessão`
-                : 'Gratuito'}
-            </span>
-            {totalAvaliacoes > 0 && (
-              <span className="flex items-center text-yellow-600 text-xs font-semibold">
-                <Star className="h-3.5 w-3.5 fill-current mr-1" />
-                {media.toFixed(1)}
-                <span className="text-muted-foreground font-normal ml-1">
-                  ({totalAvaliacoes} avaliações)
+          <div className="flex flex-col items-start gap-1 w-full">
+            <div className="flex items-center justify-between w-full gap-2">
+              <CardTitle className="text-lg line-clamp-1" title={name}>
+                {name}
+              </CardTitle>
+              {mentorUser?.user_type === 'professor' && (
+                <Badge className="bg-blue-600 hover:bg-blue-700 shrink-0">Professor</Badge>
+              )}
+              {mentorUser?.user_type === 'monitor' && (
+                <Badge variant="secondary" className="shrink-0">
+                  Monitor
+                </Badge>
+              )}
+              {mentorUser?.user_type === 'student' && (
+                <Badge variant="outline" className="border-green-600 text-green-700 shrink-0">
+                  Estudante
+                </Badge>
+              )}
+              {mentorUser?.user_type === 'responsavel' && (
+                <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600 shrink-0">
+                  Pai/Mãe (Responsável)
+                </Badge>
+              )}
+              {mentorUser?.user_type === 'lider_escolar' && (
+                <Badge className="bg-purple-600 hover:bg-purple-700 shrink-0">Líder Escolar</Badge>
+              )}
+            </div>
+            <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
+              {(mentorUser?.user_type === 'professor' || mentorUser?.user_type === 'monitor') && (
+                <span>
+                  {valorSessao > 0
+                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorSessao)}/sessão`
+                    : 'Gratuito'}
                 </span>
-              </span>
-            )}
-          </CardDescription>
+              )}
+              {totalAvaliacoes > 0 && (
+                <span className="flex items-center text-yellow-600 text-xs font-semibold">
+                  <Star className="h-3.5 w-3.5 fill-current mr-1" />
+                  {media.toFixed(1)}
+                  <span className="text-muted-foreground font-normal ml-1">
+                    ({totalAvaliacoes} avaliações)
+                  </span>
+                </span>
+              )}
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 space-y-5">
-        <div>
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5" /> Disciplinas
-          </h4>
-          <div className="flex flex-wrap gap-1.5">
-            {subjects.length > 0 ? (
-              subjects.map((s: string, i: number) => (
-                <Badge key={i} variant="secondary" className="font-normal">
-                  {s}
-                </Badge>
-              ))
-            ) : (
-              <span className="text-sm text-muted-foreground italic">Não informadas</span>
-            )}
+        {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') && (
+          <div>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5" /> Disciplinas
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {subjects.length > 0 ? (
+                subjects.map((s: string, i: number) => (
+                  <Badge key={i} variant="secondary" className="font-normal">
+                    {s}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground italic">Não informadas</span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         {profile.bio && (
           <div className="overflow-hidden">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
@@ -366,152 +394,154 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           </div>
         )}
       </CardContent>
-      <CardFooter className="pt-4 border-t">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full">Agendar Sessão</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Agendar com {name}</DialogTitle>
-              <DialogDescription>
-                Preencha os detalhes abaixo para solicitar um agendamento.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-                <FormField
-                  control={form.control}
-                  name="assunto"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assunto / Disciplina</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o assunto" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subjects.map((s: string, i: number) => (
-                            <SelectItem key={`subj-${i}`} value={s}>
-                              {s}
-                            </SelectItem>
-                          ))}
-                          {disciplinas
-                            .filter((d: any) => !subjects.includes(d.nome))
-                            .map((d: any) => (
-                              <SelectItem key={`disc-${d.id}`} value={d.nome}>
-                                {d.nome}
+      {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') && (
+        <CardFooter className="pt-4 border-t">
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full">Agendar Sessão</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Agendar com {name}</DialogTitle>
+                <DialogDescription>
+                  Preencha os detalhes abaixo para solicitar um agendamento.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="assunto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assunto / Disciplina</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o assunto" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {subjects.map((s: string, i: number) => (
+                              <SelectItem key={`subj-${i}`} value={s}>
+                                {s}
                               </SelectItem>
                             ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="data_agendamento"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                            {disciplinas
+                              .filter((d: any) => !subjects.includes(d.nome))
+                              .map((d: any) => (
+                                <SelectItem key={`disc-${d.id}`} value={d.nome}>
+                                  {d.nome}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="data_agendamento"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Data</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={'outline'}
+                                className={cn(
+                                  'w-full pl-3 text-left font-normal',
+                                  !field.value && 'text-muted-foreground',
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, 'dd/MM/yyyy')
+                                ) : (
+                                  <span>Escolha uma data</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="horario_inicio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Início (HH:MM)</FormLabel>
                           <FormControl>
-                            <Button
-                              variant={'outline'}
-                              className={cn(
-                                'w-full pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground',
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, 'dd/MM/yyyy')
-                              ) : (
-                                <span>Escolha uma data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <Input type="time" {...field} />
                           </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="horario_fim"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fim (HH:MM)</FormLabel>
+                          <FormControl>
+                            <Input type="time" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
-                    name="horario_inicio"
+                    name="local"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Início (HH:MM)</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
+                        <FormLabel>Local</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o local" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {locais.map((l: any) => (
+                              <SelectItem key={l.id} value={l.nome}>
+                                {l.nome} {l.endereco ? `- ${l.endereco}` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="horario_fim"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fim (HH:MM)</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="local"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Local</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o local" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {locais.map((l: any) => (
-                            <SelectItem key={l.id} value={l.nome}>
-                              {l.nome} {l.endereco ? `- ${l.endereco}` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="pt-2">
-                  <Button type="submit" className="w-full">
-                    Confirmar Agendamento
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </CardFooter>
+                  <div className="pt-2">
+                    <Button type="submit" className="w-full">
+                      Confirmar Agendamento
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </CardFooter>
+      )}
     </Card>
   )
 }

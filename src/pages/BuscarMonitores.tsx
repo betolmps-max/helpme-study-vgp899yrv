@@ -6,7 +6,6 @@ import { useToast } from '@/hooks/use-toast'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getDisciplinas, Disciplina } from '@/services/disciplinas'
 import { getLocaisList } from '@/services/locais'
-import { getMentorProfiles } from '@/services/profiles'
 import pb from '@/lib/pocketbase/client'
 
 import { Button } from '@/components/ui/button'
@@ -38,13 +37,21 @@ export default function BuscarMonitores() {
 
   const loadData = () => {
     Promise.all([
-      getMentorProfiles(),
+      pb.collection('users').getFullList(),
+      pb.collection('profiles').getFullList(),
       getDisciplinas(),
       getLocaisList(),
       pb.collection('favoritos_locais').getFullList(),
     ])
-      .then(([p, d, l, favs]) => {
-        setProfiles(p)
+      .then(([u, p, d, l, favs]) => {
+        const combinedProfiles = u.map((user) => {
+          const userProfile = p.find((prof) => prof.user_id === user.id) || {
+            id: `dummy-${user.id}`,
+            user_id: user.id,
+          }
+          return { ...userProfile, expand: { user_id: user } }
+        })
+        setProfiles(combinedProfiles)
         setDisciplinas(d)
         setLocais(l)
         setFavoritosLocais(favs)
@@ -70,7 +77,6 @@ export default function BuscarMonitores() {
 
   const filteredProfiles = profiles.filter((p) => {
     const userType = p.expand?.user_id?.user_type
-    if (userType !== 'monitor' && userType !== 'professor') return false
 
     if (filterSubject !== 'all') {
       if (!p.subjects) return false
@@ -88,8 +94,9 @@ export default function BuscarMonitores() {
     if (filterName.trim() !== '') {
       const query = filterName.trim().toLowerCase()
       const name = (p.expand?.user_id?.name || '').toLowerCase()
+      const email = (p.expand?.user_id?.email || '').toLowerCase()
       const subjectStr = (p.subjects || '').toLowerCase()
-      if (!name.includes(query) && !subjectStr.includes(query)) {
+      if (!name.includes(query) && !email.includes(query) && !subjectStr.includes(query)) {
         return false
       }
     }
@@ -101,9 +108,9 @@ export default function BuscarMonitores() {
     <div className="container mx-auto p-4 md:p-8 space-y-8 animate-fade-in-up w-full">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Buscar Monitores</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Comunidade</h1>
           <p className="text-muted-foreground mt-1">
-            Encontre professores e monitores para te ajudar nos estudos.
+            Encontre professores, monitores, estudantes e líderes na plataforma.
           </p>
         </div>
 
@@ -111,7 +118,7 @@ export default function BuscarMonitores() {
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou matéria..."
+              placeholder="Buscar por nome, email ou matéria..."
               value={filterName}
               onChange={(e) => setFilterName(e.target.value)}
               className="pl-9"
@@ -159,7 +166,7 @@ export default function BuscarMonitores() {
       ) : filteredProfiles.length === 0 ? (
         <div className="text-center py-20 border rounded-lg bg-muted/20">
           <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-          <h3 className="text-lg font-medium">Nenhum monitor encontrado para esta busca</h3>
+          <h3 className="text-lg font-medium">Nenhum usuário encontrado para esta busca</h3>
           <p className="text-muted-foreground mt-1">Tente buscar com outros filtros ou limpe-os.</p>
           {(filterSubject !== 'all' || filterLocal !== 'all' || filterName !== '') && (
             <Button

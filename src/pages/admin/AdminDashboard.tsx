@@ -11,9 +11,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useRealtime } from '@/hooks/use-realtime'
-import { getUsersList, updateUserAdminStatus } from '@/services/users'
+import { getUsersList, getStaffUsers, updateUserAdminStatus } from '@/services/users'
 import { getAppointmentsList } from '@/services/appointments'
-import { Users, CalendarDays, Shield, ShieldOff, Loader2 } from 'lucide-react'
+import { Users, CalendarDays, Shield, ShieldOff, Loader2, Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import pb from '@/lib/pocketbase/client'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { LocationsManager } from '@/components/admin/LocationsManager'
@@ -21,13 +24,20 @@ import { LocationsManager } from '@/components/admin/LocationsManager'
 export default function AdminDashboard() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<any[]>([])
+  const [staffUsers, setStaffUsers] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const loadData = async () => {
     try {
-      const [usersData, apptsData] = await Promise.all([getUsersList(), getAppointmentsList()])
+      const [usersData, staffData, apptsData] = await Promise.all([
+        getUsersList(),
+        getStaffUsers(searchTerm),
+        getAppointmentsList(),
+      ])
       setUsers(usersData)
+      setStaffUsers(staffData)
       setAppointments(apptsData)
     } catch (error) {
       toast.error('Failed to load dashboard data')
@@ -40,8 +50,19 @@ export default function AdminDashboard() {
     loadData()
   }, [])
 
+  useEffect(() => {
+    if (loading) return
+    const delayDebounceFn = setTimeout(() => {
+      getStaffUsers(searchTerm)
+        .then(setStaffUsers)
+        .catch(() => {})
+    }, 300)
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchTerm, loading])
+
   useRealtime('users', () => {
     getUsersList().then(setUsers)
+    getStaffUsers(searchTerm).then(setStaffUsers)
   })
 
   useRealtime('appointments', () => {
@@ -94,15 +115,25 @@ export default function AdminDashboard() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Registered Users</CardTitle>
+        <CardHeader className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <CardTitle>Professors & Monitors</CardTitle>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+            <Input
+              type="search"
+              placeholder="Search by name or email..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border bg-white overflow-hidden">
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>User</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Role</TableHead>
@@ -110,9 +141,22 @@ export default function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {staffUsers.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name || 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src={u.avatar ? pb.files.getURL(u, u.avatar) : ''}
+                            alt={u.name}
+                          />
+                          <AvatarFallback>
+                            {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-slate-900">{u.name || 'N/A'}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-slate-600">{u.email}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">
@@ -149,10 +193,12 @@ export default function AdminDashboard() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {users.length === 0 && (
+                {staffUsers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center text-slate-500">
-                      No users found.
+                      {searchTerm
+                        ? 'No professors or monitors match your search.'
+                        : 'No professors or monitors found.'}
                     </TableCell>
                   </TableRow>
                 )}

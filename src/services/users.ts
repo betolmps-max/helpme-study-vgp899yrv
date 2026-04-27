@@ -19,6 +19,18 @@ export const getMonitors = () => {
   })
 }
 
+export const getStaffUsers = (searchTerm: string = '') => {
+  let filter = '(user_type = "professor" || user_type = "monitor")'
+  if (searchTerm) {
+    const term = searchTerm.replace(/"/g, '')
+    filter += ` && (name ~ "${term}" || email ~ "${term}")`
+  }
+  return pb.collection('users').getFullList({
+    filter,
+    sort: 'name',
+  })
+}
+
 export const updateUserAvatar = (id: string, file: File) => {
   const formData = new FormData()
   formData.append('avatar', file)

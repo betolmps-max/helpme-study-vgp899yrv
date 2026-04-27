@@ -218,7 +218,9 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
           <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
             <span>
               {mentorUser?.user_type === 'professor' ? 'Professor(a)' : 'Monitor(a)'} •{' '}
-              {valorSessao > 0 ? `${valorSessao} Helps/sessão` : 'Gratuito'}
+              {valorSessao > 0
+                ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorSessao)}/sessão`
+                : 'Gratuito'}
             </span>
             {totalAvaliacoes > 0 && (
               <span className="flex items-center text-yellow-600 text-xs font-semibold">

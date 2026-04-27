@@ -6,7 +6,7 @@ onRecordAfterCreateSuccess((e) => {
     try {
       $app.runInTransaction((txApp) => {
         const estudante = txApp.findRecordById('users', estudanteId)
-        const saldo = estudante.getFloat('saldo_helps') || 0
+        const saldo = estudante.getFloat('saldo') || 0
 
         if (saldo < valorSessao) {
           e.record.set('status', 'cancelado')
@@ -14,7 +14,7 @@ onRecordAfterCreateSuccess((e) => {
           return
         }
 
-        estudante.set('saldo_helps', saldo - valorSessao)
+        estudante.set('saldo', saldo - valorSessao)
         txApp.save(estudante)
 
         const txCol = txApp.findCollectionByNameOrId('transacoes')

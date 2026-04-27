@@ -259,7 +259,10 @@ export default function GestaoAgendamentos() {
                   <div className="flex items-center justify-between mt-2 pt-2 border-t">
                     <div className="flex items-center gap-2 font-medium text-slate-700">
                       <span className="text-muted-foreground text-xs">Valor da Sessão:</span>
-                      {agendamento.valor_pago.toFixed(2)} HLP
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(agendamento.valor_pago)}
                     </div>
 
                     <HoverCard>
@@ -300,14 +303,18 @@ export default function GestaoAgendamentos() {
                                 Estrelas
                               </span>
                               <span className="font-medium text-green-600">
-                                {Math.max(
-                                  0,
-                                  agendamento.valor_pago -
-                                    agendamento.valor_pago * 0.02 -
-                                    agendamento.valor_pago *
-                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
-                                ).toFixed(2)}{' '}
-                                HLP
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                }).format(
+                                  Math.max(
+                                    0,
+                                    agendamento.valor_pago -
+                                      agendamento.valor_pago * 0.02 -
+                                      agendamento.valor_pago *
+                                        ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                  ),
+                                )}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -316,14 +323,18 @@ export default function GestaoAgendamentos() {
                                 Estrelas
                               </span>
                               <span className="font-medium text-amber-600">
-                                {Math.max(
-                                  0,
-                                  agendamento.valor_pago * 0.5 -
-                                    agendamento.valor_pago * 0.02 -
-                                    agendamento.valor_pago *
-                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
-                                ).toFixed(2)}{' '}
-                                HLP
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                }).format(
+                                  Math.max(
+                                    0,
+                                    agendamento.valor_pago * 0.5 -
+                                      agendamento.valor_pago * 0.02 -
+                                      agendamento.valor_pago *
+                                        ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                  ),
+                                )}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -331,15 +342,19 @@ export default function GestaoAgendamentos() {
                                 <Star className="h-3 w-3 fill-slate-300 text-slate-300" /> 1 Estrela
                               </span>
                               <span className="font-medium text-red-600">
-                                {Math.max(
-                                  0,
-                                  agendamento.valor_pago -
-                                    agendamento.valor_pago * 0.9 -
-                                    agendamento.valor_pago * 0.02 -
-                                    agendamento.valor_pago *
-                                      ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
-                                ).toFixed(2)}{' '}
-                                HLP
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                }).format(
+                                  Math.max(
+                                    0,
+                                    agendamento.valor_pago -
+                                      agendamento.valor_pago * 0.9 -
+                                      agendamento.valor_pago * 0.02 -
+                                      agendamento.valor_pago *
+                                        ((locaisTaxas[(agendamento as any).local_id] || 0) / 100),
+                                  ),
+                                )}
                               </span>
                             </div>
                           </div>

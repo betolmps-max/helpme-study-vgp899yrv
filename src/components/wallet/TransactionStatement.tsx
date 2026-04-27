@@ -53,7 +53,7 @@ export function TransactionStatement() {
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md flex flex-col h-full">
         <SheetHeader>
-          <SheetTitle>Extrato de Helps</SheetTitle>
+          <SheetTitle>Extrato</SheetTitle>
           <SheetDescription>Acompanhe todas as suas movimentações financeiras.</SheetDescription>
         </SheetHeader>
 
@@ -105,13 +105,12 @@ export function TransactionStatement() {
                         <p
                           className={cn('font-bold', positive ? 'text-green-600' : 'text-red-600')}
                         >
-                          {positive ? '+' : '-'} {tx.valor.toFixed(2)} HLP
+                          {positive ? '+' : '-'}{' '}
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(tx.valor)}
                         </p>
-                        {tx.tipo === 'resgate' && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            (R$ {(tx.valor / 10).toFixed(2)})
-                          </p>
-                        )}
                         <Badge
                           variant={tx.status === 'cancelado' ? 'destructive' : 'secondary'}
                           className="text-[10px] uppercase px-1 py-0 h-4 mt-1"

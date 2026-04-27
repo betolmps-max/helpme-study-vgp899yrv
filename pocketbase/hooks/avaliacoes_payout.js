@@ -60,7 +60,7 @@ onRecordAfterCreateSuccess((e) => {
 
         if (valorMonitor > 0) {
           const monitor = txApp.findRecordById('users', monitorId)
-          monitor.set('saldo_helps', (monitor.getFloat('saldo_helps') || 0) + valorMonitor)
+          monitor.set('saldo', (monitor.getFloat('saldo') || 0) + valorMonitor)
           txApp.save(monitor)
 
           const txM = new Record(txCol)
@@ -74,7 +74,7 @@ onRecordAfterCreateSuccess((e) => {
 
         if (valorEstudante > 0) {
           const estudante = txApp.findRecordById('users', estudanteId)
-          estudante.set('saldo_helps', (estudante.getFloat('saldo_helps') || 0) + valorEstudante)
+          estudante.set('saldo', (estudante.getFloat('saldo') || 0) + valorEstudante)
           txApp.save(estudante)
 
           const txE = new Record(txCol)
@@ -88,7 +88,7 @@ onRecordAfterCreateSuccess((e) => {
 
         if (leaderFee > 0 && liderId) {
           const lider = txApp.findRecordById('users', liderId)
-          lider.set('saldo_helps', (lider.getFloat('saldo_helps') || 0) + leaderFee)
+          lider.set('saldo', (lider.getFloat('saldo') || 0) + leaderFee)
           txApp.save(lider)
 
           const txL = new Record(txCol)

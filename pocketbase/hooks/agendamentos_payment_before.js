@@ -10,9 +10,9 @@ onRecordCreate((e) => {
 
     if (valorSessao > 0) {
       const estudante = $app.findRecordById('users', estudanteId)
-      const saldo = estudante.getFloat('saldo_helps') || 0
+      const saldo = estudante.getFloat('saldo') || 0
       if (saldo < valorSessao) {
-        throw new BadRequestError('Saldo insuficiente de Helps para este agendamento.')
+        throw new BadRequestError('Saldo insuficiente para este agendamento.')
       }
     }
   } catch (err) {

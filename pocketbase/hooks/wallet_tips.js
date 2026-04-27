@@ -19,14 +19,14 @@ routerAdd(
         throw new BadRequestError('Apenas o estudante pode dar gorjeta.')
 
       const estudante = txApp.findRecordById('users', estudanteId)
-      const saldo = estudante.getFloat('saldo_helps') || 0
+      const saldo = estudante.getFloat('saldo') || 0
       if (saldo < valor) throw new BadRequestError('Saldo insuficiente para a gorjeta.')
 
-      estudante.set('saldo_helps', saldo - valor)
+      estudante.set('saldo', saldo - valor)
       txApp.save(estudante)
 
       const monitor = txApp.findRecordById('users', monitorId)
-      monitor.set('saldo_helps', (monitor.getFloat('saldo_helps') || 0) + valor)
+      monitor.set('saldo', (monitor.getFloat('saldo') || 0) + valor)
       txApp.save(monitor)
 
       const txCol = txApp.findCollectionByNameOrId('transacoes')

@@ -12,8 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { depositHelps, withdrawHelps } from '@/services/wallet'
 import { toast } from 'sonner'
-import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark, Info } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark } from 'lucide-react'
 import { TransactionStatement } from './TransactionStatement'
 
 export function WalletDialogs({ user }: { user: any }) {
@@ -28,7 +27,7 @@ export function WalletDialogs({ user }: { user: any }) {
     setLoading(true)
     try {
       await depositHelps(Number(amount))
-      toast.success('Helps adicionados com sucesso! (Simulado)')
+      toast.success('Fundos adicionados com sucesso! (Simulado)')
       setDepositOpen(false)
       setAmount('')
     } catch (e: any) {
@@ -41,7 +40,7 @@ export function WalletDialogs({ user }: { user: any }) {
   const handleWithdraw = async () => {
     if (!amount || Number(amount) <= 0) return toast.error('Valor inválido')
     if (!details) return toast.error('Informe os detalhes do PIX ou Conta bancária')
-    if (Number(amount) > (user?.saldo_helps || 0)) return toast.error('Saldo insuficiente')
+    if (Number(amount) > (user?.saldo || 0)) return toast.error('Saldo insuficiente')
 
     setLoading(true)
     try {
@@ -63,41 +62,25 @@ export function WalletDialogs({ user }: { user: any }) {
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
         <DialogTrigger asChild>
           <Button variant="default">
-            <Plus className="mr-2 h-4 w-4" /> Comprar Helps
+            <Plus className="mr-2 h-4 w-4" /> Adicionar Fundos
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar Fundos</DialogTitle>
-            <DialogDescription>
-              Simule a compra de Helps via Cartão ou PIX. (1 Real = 10 Helps)
-            </DialogDescription>
+            <DialogDescription>Simule a adição de fundos via Cartão ou PIX.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Alert className="bg-primary/5 text-primary border-primary/20">
-              <Info className="h-4 w-4 text-primary" />
-              <AlertTitle className="text-primary font-semibold">
-                Conversão: R$ 1,00 = 10 Helps
-              </AlertTitle>
-              <AlertDescription className="text-primary/90 text-sm mt-1">
-                Exemplo: Ao adicionar <strong>R$ 10,00</strong>, você receberá{' '}
-                <strong>100 Helps</strong>.
-              </AlertDescription>
-            </Alert>
             <div className="space-y-2">
               <Label>Valor (R$)</Label>
               <Input
                 type="number"
                 min="1"
+                step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="100"
+                placeholder="100.00"
               />
-              {amount && Number(amount) > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Você receberá: {Number(amount) * 10} Helps
-                </p>
-              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1">
@@ -118,33 +101,34 @@ export function WalletDialogs({ user }: { user: any }) {
       <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
         <DialogTrigger asChild>
           <Button variant="outline">
-            <ArrowDownToLine className="mr-2 h-4 w-4" /> Resgatar
+            <ArrowDownToLine className="mr-2 h-4 w-4" /> Resgatar Saldo
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Resgatar Helps</DialogTitle>
+            <DialogTitle>Resgatar Saldo</DialogTitle>
             <DialogDescription>
-              Solicite transferência do seu saldo para sua conta bancária. (10 Helps = 1 Real)
+              Solicite transferência do seu saldo para sua conta bancária.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Valor a resgatar (Helps)</Label>
+              <Label>Valor a resgatar (R$)</Label>
               <Input
                 type="number"
                 min="1"
+                step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Ex: 50"
+                placeholder="Ex: 50.00"
               />
               <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
-                <p>Saldo disponível: {user?.saldo_helps?.toFixed(2) || '0.00'} HLP</p>
-                {amount && Number(amount) > 0 && (
-                  <p className="font-medium text-primary">
-                    Equivalente a: R$ {(Number(amount) / 10).toFixed(2)}
-                  </p>
-                )}
+                <p>
+                  Saldo disponível:{' '}
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    user?.saldo || 0,
+                  )}
+                </p>
               </div>
             </div>
             <div className="space-y-2">
@@ -158,7 +142,7 @@ export function WalletDialogs({ user }: { user: any }) {
             <Button
               className="w-full"
               onClick={handleWithdraw}
-              disabled={loading || Number(amount) > (user?.saldo_helps || 0) || !amount}
+              disabled={loading || Number(amount) > (user?.saldo || 0) || !amount}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Solicitar Resgate

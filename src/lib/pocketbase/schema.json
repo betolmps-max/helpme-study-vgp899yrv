@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-24T17:52:34.814Z",
+  "generatedAt": "2026-04-27T15:08:39.856Z",
   "collections": [
     {
       "name": "users",
@@ -71,6 +71,12 @@
         },
         {
           "name": "saldo_helps",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "saldo",
           "type": "number",
           "required": false,
           "system": false

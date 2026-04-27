@@ -324,9 +324,11 @@ export default function Profile() {
                 <Coins className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">My Wallet (Helps)</p>
+                <p className="text-sm font-medium text-muted-foreground">Minha Carteira</p>
                 <h3 className="text-2xl font-bold">
-                  {currentUser?.saldo_helps?.toFixed(2) || '0.00'} HLP
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    currentUser?.saldo || 0,
+                  )}
                 </h3>
               </div>
             </div>
@@ -516,17 +518,18 @@ export default function Profile() {
           {isEducator && (
             <>
               <div className="space-y-3">
-                <Label className="text-base font-semibold">Preço da Sessão (Helps)</Label>
+                <Label className="text-base font-semibold">Preço da Sessão (R$)</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
                     min="0"
+                    step="0.01"
                     value={valorSessao}
                     onChange={(e) => setValorSessao(Number(e.target.value))}
                     className="w-32"
                   />
                   <span className="text-sm text-muted-foreground">
-                    Helps por sessão (0 = Gratuito) | 1 Real = 10 Helps
+                    Reais por sessão (0 = Gratuito)
                   </span>
                 </div>
               </div>

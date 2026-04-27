@@ -135,7 +135,12 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
               <FormMessage />
               {valorSessao > 0 && (
                 <div className="mt-2 p-3 bg-primary/10 text-primary-foreground rounded-md text-sm border border-primary/20">
-                  <p className="text-primary font-medium">Preço da sessão: {valorSessao} Helps</p>
+                  <p className="text-primary font-medium">
+                    Preço da sessão:{' '}
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                      valorSessao,
+                    )}
+                  </p>
                 </div>
               )}
             </FormItem>

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { TudorMascot } from './TudorMascot'
 import { cn } from '@/lib/utils'
 import { useLocation } from 'react-router-dom'
+import { useTermsModal } from '@/components/TermosOverlay'
 
 interface Step {
   targetId: string | null
@@ -49,18 +50,21 @@ const steps: Step[] = [
 export function TudorTutorial() {
   const { user } = useAuth()
   const location = useLocation()
+  const { isTermsModalOpen } = useTermsModal()
   const [isVisible, setIsVisible] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
 
   useEffect(() => {
+    if (isTermsModalOpen) return
+
     if (user && user.tutorial_visto === false && location.pathname === '/home') {
       const timer = setTimeout(() => {
         setIsVisible(true)
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [user, location.pathname])
+  }, [user, location.pathname, isTermsModalOpen])
 
   useEffect(() => {
     if (!isVisible) return
@@ -93,6 +97,7 @@ export function TudorTutorial() {
     if (user && user.tutorial_visto === false) {
       try {
         await pb.collection('users').update(user.id, { tutorial_visto: true })
+        await pb.collection('users').authRefresh()
       } catch (err) {
         console.error('Failed to update tutorial status', err)
       }

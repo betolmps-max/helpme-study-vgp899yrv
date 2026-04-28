@@ -7,6 +7,13 @@ export const depositHelps = (valor: number) =>
     headers: { 'Content-Type': 'application/json' },
   })
 
+export const payAgendamento = (agendamento_id: string, method: string) =>
+  pb.send('/backend/v1/checkout/session', {
+    method: 'POST',
+    body: JSON.stringify({ agendamento_id, method }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+
 export const withdrawHelps = (valor: number, detalhes_pagamento: string) =>
   pb.send('/backend/v1/wallet/withdraw', {
     method: 'POST',

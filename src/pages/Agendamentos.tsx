@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { format } from 'date-fns'
-import { CalendarIcon, Clock, MapPin, User, MessageCircle, Star, CheckCircle2 } from 'lucide-react'
+import {
+  CalendarIcon,
+  Clock,
+  MapPin,
+  User,
+  MessageCircle,
+  Star,
+  CheckCircle2,
+  CreditCard,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
@@ -167,6 +176,18 @@ export default function AgendamentosPage() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:justify-end sm:border-l sm:pl-4 mt-4 sm:mt-0 gap-2 shrink-0">
+                    {agendamento.status === 'pendente' &&
+                      (agendamento.valor_pago || 0) > 0 &&
+                      agendamento.estudante_id === user.id && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => navigate(`/checkout/agendamento/${agendamento.id}`)}
+                        >
+                          <CreditCard className="h-4 w-4" /> Pagar
+                        </Button>
+                      )}
                     <Button
                       variant="outline"
                       size="sm"

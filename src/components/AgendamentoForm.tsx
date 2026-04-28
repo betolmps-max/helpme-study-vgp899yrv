@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useState, useEffect } from 'react'
 import { getLocaisList } from '@/services/locais'
 import { getProfileByUserId } from '@/services/profiles'
+import { useNavigate } from 'react-router-dom'
 
 const formSchema = z.object({
   monitor_id: z.string({ required_error: 'Selecione um monitor.' }),
@@ -46,6 +47,7 @@ interface AgendamentoFormProps {
 }
 
 export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoFormProps) {
+  const navigate = useNavigate()
   const [locais, setLocais] = useState<any[]>([])
   const [selectedMonitorProfile, setSelectedMonitorProfile] = useState<any>(null)
 
@@ -95,10 +97,14 @@ export function AgendamentoForm({ monitors, userId, onSuccess }: AgendamentoForm
         data.local_id = values.local_id
       }
 
-      await createAgendamento(data)
+      const novo = await createAgendamento(data)
       toast.success('Agendamento criado com sucesso!')
       form.reset()
-      onSuccess()
+      if (data.valor_pago > 0) {
+        navigate(`/checkout/agendamento/${novo.id}`)
+      } else {
+        onSuccess()
+      }
     } catch (error) {
       toast.error('Erro ao criar agendamento.')
     }

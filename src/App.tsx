@@ -9,6 +9,7 @@ import Landing from './pages/Landing'
 import NotFound from './pages/NotFound'
 import Agendamentos from './pages/Agendamentos'
 import GestaoAgendamentos from './pages/GestaoAgendamentos'
+import Checkout from './pages/Checkout'
 import GestaoLider from './pages/GestaoLider'
 import Profile from './pages/Profile'
 import BuscarMonitores from './pages/BuscarMonitores'
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/home" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/checkout/:type/:id?" element={<Checkout />} />
             <Route path="/agendamentos" element={<Agendamentos />} />
             <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
             <Route path="/gestao-lider" element={<GestaoLider />} />

@@ -14,27 +14,20 @@ import { depositHelps, withdrawHelps } from '@/services/wallet'
 import { toast } from 'sonner'
 import { Loader2, Plus, ArrowDownToLine, CreditCard, Landmark } from 'lucide-react'
 import { TransactionStatement } from './TransactionStatement'
+import { useNavigate } from 'react-router-dom'
 
 export function WalletDialogs({ user }: { user: any }) {
+  const navigate = useNavigate()
   const [depositOpen, setDepositOpen] = useState(false)
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [amount, setAmount] = useState('')
   const [details, setDetails] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleDeposit = async () => {
+  const handleDeposit = () => {
     if (!amount || Number(amount) <= 0) return toast.error('Valor inválido')
-    setLoading(true)
-    try {
-      await depositHelps(Number(amount))
-      toast.success('Fundos adicionados com sucesso! (Simulado)')
-      setDepositOpen(false)
-      setAmount('')
-    } catch (e: any) {
-      toast.error(e.message || 'Erro ao adicionar fundos')
-    } finally {
-      setLoading(false)
-    }
+    setDepositOpen(false)
+    navigate(`/checkout/deposit?amount=${amount}`)
   }
 
   const handleWithdraw = async () => {
@@ -90,9 +83,8 @@ export function WalletDialogs({ user }: { user: any }) {
                 <Landmark className="mr-2 h-4 w-4" /> PIX
               </Button>
             </div>
-            <Button className="w-full" onClick={handleDeposit} disabled={loading || !amount}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirmar Pagamento Simulado
+            <Button className="w-full" onClick={handleDeposit} disabled={!amount}>
+              Continuar para Pagamento
             </Button>
           </div>
         </DialogContent>

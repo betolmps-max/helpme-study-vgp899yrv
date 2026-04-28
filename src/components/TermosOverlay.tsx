@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, LogOut } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { Loader2, LogOut, Info } from 'lucide-react'
 
 export function TermosOverlay({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
   const [termos, setTermos] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
+  const viewportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!user) {
@@ -36,6 +39,30 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
     fetchTermos()
   }, [user])
 
+  const checkScroll = () => {
+    if (viewportRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
+      if (scrollHeight <= clientHeight || scrollHeight - scrollTop - clientHeight < 20) {
+        setHasScrolledToBottom(true)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (termos && !loading && viewportRef.current) {
+      const observer = new ResizeObserver(() => checkScroll())
+      observer.observe(viewportRef.current)
+
+      // Initial check to handle short content or immediate rendering
+      const timeoutId = setTimeout(checkScroll, 100)
+
+      return () => {
+        observer.disconnect()
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [termos, loading])
+
   if (!user) return <>{children}</>
 
   if (loading) {
@@ -59,6 +86,7 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
   const isUpdate = !!hasAccepted
 
   const handleAccept = async () => {
+    if (!hasScrolledToBottom) return
     setAccepting(true)
     try {
       const now = new Date().toISOString()
@@ -84,7 +112,13 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0 bg-slate-50/50">
-          <ScrollArea className="h-full w-full p-4 sm:p-8">
+          <ScrollArea
+            className="h-full w-full p-4 sm:p-8"
+            viewportRef={viewportRef}
+            onScroll={() => {
+              if (!hasScrolledToBottom) checkScroll()
+            }}
+          >
             <div className="whitespace-pre-wrap text-sm sm:text-base text-slate-700 leading-relaxed font-medium pb-4">
               {termos.conteudo}
             </div>
@@ -101,15 +135,32 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
             <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
-          <Button
-            size="lg"
-            onClick={handleAccept}
-            disabled={accepting}
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 sm:px-12 text-base sm:text-lg shadow-md transition-all hover:shadow-lg"
-          >
-            {accepting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-            Aceitar e Continuar
-          </Button>
+
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <span tabIndex={0} className="w-full sm:w-auto inline-flex outline-none">
+                  <Button
+                    size="lg"
+                    onClick={handleAccept}
+                    disabled={accepting || !hasScrolledToBottom}
+                    className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 sm:px-12 text-base sm:text-lg shadow-md transition-all hover:shadow-lg disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed disabled:pointer-events-none"
+                  >
+                    {accepting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                    Li e Aceito
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!hasScrolledToBottom && (
+                <TooltipContent side="top" className="bg-slate-800 text-white border-slate-700">
+                  <p className="flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Leia os termos até o final para aceitar
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </CardFooter>
       </Card>
     </div>

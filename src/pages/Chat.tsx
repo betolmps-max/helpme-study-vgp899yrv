@@ -8,9 +8,12 @@ import {
   getConversas,
   getMensagens,
   enviarMensagem,
+  getOrCreateConversa,
   type Conversa,
   type Mensagem,
 } from '@/services/chat'
+import { NewChatDialog } from '@/components/chat/NewChatDialog'
+import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -108,6 +111,26 @@ export default function Chat() {
       .toUpperCase()
   }
 
+  const getChatAvatar = (conversa: Conversa) => {
+    if (!conversa.expand?.participantes) return null
+    const other = conversa.expand.participantes.find((p) => p.id !== user.id)
+    if (other?.avatar) {
+      return pb.files.getURL(other, other.avatar)
+    }
+    return null
+  }
+
+  const handleStartChat = async (otherUserId: string) => {
+    if (!user) return
+    try {
+      const conversa = await getOrCreateConversa([user.id, otherUserId])
+      await loadConversas()
+      setActiveConversaId(conversa.id)
+    } catch (error) {
+      console.error('Erro ao iniciar conversa', error)
+    }
+  }
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newMessage.trim() || !activeConversaId || sending) return
@@ -132,11 +155,12 @@ export default function Chat() {
           activeConversaId ? 'hidden sm:flex' : 'flex',
         )}
       >
-        <div className="p-4 border-b bg-white">
+        <div className="p-4 border-b bg-white flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-indigo-600" />
             Mensagens
           </h2>
+          <NewChatDialog currentUserId={user.id} onStartChat={handleStartChat} />
         </div>
         <ScrollArea className="flex-1">
           {loading ? (
@@ -171,6 +195,7 @@ export default function Chat() {
                     )}
                   >
                     <Avatar className="h-10 w-10 border border-slate-200">
+                      <AvatarImage src={getChatAvatar(conversa) || ''} className="object-cover" />
                       <AvatarFallback
                         className={
                           isActive ? 'bg-indigo-200 text-indigo-700' : 'bg-slate-200 text-slate-700'
@@ -234,6 +259,7 @@ export default function Chat() {
                 </svg>
               </Button>
               <Avatar className="h-10 w-10 border border-slate-200">
+                <AvatarImage src={getChatAvatar(activeConversa) || ''} className="object-cover" />
                 <AvatarFallback className="bg-indigo-100 text-indigo-700">
                   {getChatInitials(getChatName(activeConversa))}
                 </AvatarFallback>

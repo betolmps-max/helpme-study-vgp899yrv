@@ -52,6 +52,17 @@ export const enviarMensagem = async (conversaId: string, remetenteId: string, co
   return msg
 }
 
+export const searchUsersForChat = async (query: string, currentUserId: string) => {
+  if (!query || query.length < 2) return []
+  return pb
+    .collection('users')
+    .getList(1, 20, {
+      filter: `id != "${currentUserId}" && (name ~ "${query}" || email ~ "${query}")`,
+      sort: 'name',
+    })
+    .then((res) => res.items)
+}
+
 export const getOrCreateConversa = async (participantes: string[], agendamentoId?: string) => {
   let filter = ''
   if (agendamentoId) {

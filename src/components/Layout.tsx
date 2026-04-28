@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
+import { TermosOverlay } from '@/components/TermosOverlay'
 import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -201,7 +202,9 @@ export default function Layout() {
             isAuthPage ? 'max-w-md' : isLanding ? 'max-w-full' : 'max-w-5xl',
           )}
         >
-          <Outlet />
+          <TermosOverlay>
+            <Outlet />
+          </TermosOverlay>
         </div>
       </main>
     </div>

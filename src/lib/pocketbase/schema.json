@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-28T18:32:05.039Z",
+  "generatedAt": "2026-04-28T19:00:37.806Z",
   "collections": [
     {
       "name": "users",
@@ -78,6 +78,12 @@
         {
           "name": "saldo",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "termos_aceitos_em",
+          "type": "date",
           "required": false,
           "system": false
         }
@@ -746,6 +752,40 @@
           "required": true,
           "system": false,
           "selectValues": ["pendente", "processado"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "termos_uso",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.is_admin = true",
+        "update": "@request.auth.is_admin = true",
+        "delete": "@request.auth.is_admin = true"
+      },
+      "fields": [
+        {
+          "name": "conteudo",
+          "type": "text",
+          "required": true,
+          "system": false
         },
         {
           "name": "created",

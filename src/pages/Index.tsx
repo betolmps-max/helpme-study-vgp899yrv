@@ -129,7 +129,7 @@ export default function Index() {
       <StudentPendingLinks userId={user.id} />
       {user.user_type === 'responsavel' && <ResponsibleDashboard userId={user.id} />}
 
-      <Card className="w-full mx-auto shadow-elevation border-slate-200">
+      <Card id="tutorial-content" className="w-full mx-auto shadow-elevation border-slate-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 border-b border-slate-100">
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">

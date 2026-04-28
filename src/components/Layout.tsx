@@ -8,11 +8,13 @@ import {
   Search,
   MessageCircle,
   User as UserIcon,
+  Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { TermosOverlay } from '@/components/TermosOverlay'
+import { TudorTutorial } from '@/components/tutorial/TudorTutorial'
 import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -66,7 +68,16 @@ export default function Layout() {
 
           {user && (
             <div className="flex items-center gap-2 sm:gap-4">
+              <div
+                id="tutorial-wallet"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 text-green-700 rounded-full font-semibold text-xs sm:text-sm border border-green-100 shadow-sm transition-all hover:shadow-md cursor-default"
+              >
+                <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>{user?.saldo_helps || 0}</span>
+                <span className="hidden sm:inline-block">Helps</span>
+              </div>
               <Button
+                id="tutorial-agendamentos"
                 variant="ghost"
                 size="sm"
                 asChild
@@ -115,6 +126,7 @@ export default function Layout() {
                 </Link>
               </Button>
               <Button
+                id="tutorial-chat"
                 variant="ghost"
                 size="sm"
                 asChild
@@ -142,6 +154,7 @@ export default function Layout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
+                    id="tutorial-profile"
                     variant="ghost"
                     className="relative h-9 w-9 rounded-full ml-2 ring-1 ring-slate-200 hover:ring-indigo-300 transition-all"
                   >
@@ -207,6 +220,8 @@ export default function Layout() {
           </TermosOverlay>
         </div>
       </main>
+
+      {user && !isAuthPage && !isLanding && <TudorTutorial />}
     </div>
   )
 }

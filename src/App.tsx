@@ -19,6 +19,7 @@ import Chat from './pages/Chat'
 import { AuthProvider } from './hooks/use-auth'
 import { AdminRoute } from './components/AdminRoute'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import { TermsGuard } from './components/TermsGuard'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -29,20 +30,23 @@ const App = () => (
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Landing />} />
-            <Route path="/home" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/checkout/:type/:id?" element={<Checkout />} />
-            <Route path="/agendamentos" element={<Agendamentos />} />
-            <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
-            <Route path="/gestao-lider" element={<GestaoLider />} />
-            <Route path="/perfil" element={<Profile />} />
-            <Route path="/monitores/busca" element={<BuscarMonitores />} />
             <Route path="/termos-de-uso" element={<TermosDeUso />} />
-            <Route path="/chat" element={<Chat />} />
 
-            <Route element={<AdminRoute />}>
-              <Route path="/admin" element={<AdminDashboard />} />
+            <Route element={<TermsGuard />}>
+              <Route path="/home" element={<Index />} />
+              <Route path="/checkout/:type/:id?" element={<Checkout />} />
+              <Route path="/agendamentos" element={<Agendamentos />} />
+              <Route path="/gestao-agendamentos" element={<GestaoAgendamentos />} />
+              <Route path="/gestao-lider" element={<GestaoLider />} />
+              <Route path="/perfil" element={<Profile />} />
+              <Route path="/monitores/busca" element={<BuscarMonitores />} />
+              <Route path="/chat" element={<Chat />} />
+
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />

@@ -7,6 +7,33 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Loader2, LogOut, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+const formatText = (text: string) => {
+  return text.split('\n').map((line, i) => {
+    const parts = line.split(/(\*\*.*?\*\*|\*[^*]+\*)/g)
+    return (
+      <span key={i} className="block min-h-[1.2em] mb-1 text-slate-700">
+        {parts.map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={j} className="font-bold text-slate-900">
+                {part.slice(2, -2)}
+              </strong>
+            )
+          }
+          if (part.startsWith('*') && part.endsWith('*')) {
+            return (
+              <em key={j} className="italic text-slate-800">
+                {part.slice(1, -1)}
+              </em>
+            )
+          }
+          return <span key={j}>{part}</span>
+        })}
+      </span>
+    )
+  })
+}
+
 export default function TermosDeUso() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
@@ -38,7 +65,7 @@ export default function TermosDeUso() {
       const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
       if (
         scrollHeight <= clientHeight ||
-        scrollHeight - Math.ceil(scrollTop) - clientHeight <= 20
+        scrollHeight - Math.ceil(scrollTop) - clientHeight <= 30
       ) {
         setHasScrolledToBottom(true)
       }
@@ -49,7 +76,7 @@ export default function TermosDeUso() {
     if (termos && !loading && viewportRef.current) {
       const observer = new ResizeObserver(() => checkScroll())
       observer.observe(viewportRef.current)
-      const timeoutId = setTimeout(checkScroll, 100)
+      const timeoutId = setTimeout(checkScroll, 150)
       return () => {
         observer.disconnect()
         clearTimeout(timeoutId)
@@ -109,11 +136,9 @@ export default function TermosDeUso() {
               if (!hasScrolledToBottom) checkScroll()
             }}
           >
-            <div className="max-w-none">
+            <div className="max-w-none text-sm sm:text-base">
               {termos?.conteudo ? (
-                <div className="whitespace-pre-wrap text-sm sm:text-base text-slate-700 font-medium leading-relaxed">
-                  {termos.conteudo}
-                </div>
+                formatText(termos.conteudo)
               ) : (
                 <p className="text-center text-slate-500 italic">Nenhum termo encontrado.</p>
               )}

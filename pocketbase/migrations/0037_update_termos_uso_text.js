@@ -96,9 +96,10 @@ Para exercer seus direitos ou realizar denúncias de conduta, o USUÁRIO deve en
 Documento atualizado em 28 de abril de 2026.
 HELP ME STUDY! - Tecnologia para Educação`
 
-    const record = new Record(collection)
+    const updatedCollection = app.findCollectionByNameOrId('termos_uso')
+    const record = new Record(updatedCollection)
     record.set('conteudo', content)
-    app.save(record)
+    app.saveNoValidate(record)
   },
   (app) => {
     // Revert not strictly needed for this simple seeding

@@ -1,6 +1,24 @@
 migrate(
   (app) => {
     const collection = app.findCollectionByNameOrId('termos_uso')
+
+    const oldField = collection.fields.getByName('conteudo')
+    if (oldField) {
+      collection.fields.removeByName('conteudo')
+      collection.fields.add(
+        new TextField({
+          name: 'conteudo',
+          required: true,
+        }),
+      )
+      app.save(collection)
+    }
+
+    const existing = app.findRecordsByFilter('termos_uso', "id != ''", '', 100, 0)
+    for (let rec of existing) {
+      app.delete(rec)
+    }
+
     const record = new Record(collection)
     record.set(
       'conteudo',
@@ -66,6 +84,9 @@ HELP ME STUDY! - Tecnologia para Educação`,
     app.save(record)
   },
   (app) => {
-    // down not implemented since it's a seed
+    const existing = app.findRecordsByFilter('termos_uso', "id != ''", '', 100, 0)
+    for (let rec of existing) {
+      app.delete(rec)
+    }
   },
 )

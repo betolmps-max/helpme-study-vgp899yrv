@@ -10,7 +10,6 @@ const TermsContext = createContext<TermsContextType>({ isTermsModalOpen: false }
 
 export const useTermsModal = () => useContext(TermsContext)
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { Loader2, LogOut, Info } from 'lucide-react'
@@ -119,9 +118,9 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0 bg-slate-50/50">
-              <ScrollArea
-                className="h-full w-full p-4 sm:p-8"
-                viewportRef={viewportRef}
+              <div
+                ref={viewportRef}
+                className="h-full w-full overflow-y-auto p-4 sm:p-8"
                 onScroll={() => {
                   if (!hasScrolledToBottom) checkScroll()
                 }}
@@ -129,7 +128,7 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
                 <div className="whitespace-pre-wrap text-sm sm:text-base text-slate-700 leading-relaxed font-medium pb-4">
                   {termos.conteudo}
                 </div>
-              </ScrollArea>
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col-reverse sm:flex-row justify-center gap-3 p-4 sm:p-6 bg-white border-t z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
               <Button

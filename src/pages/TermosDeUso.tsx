@@ -119,10 +119,12 @@ export default function TermosDeUso() {
         <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-full mb-2">
           <ShieldCheck className="w-8 h-8 text-indigo-700" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Termos de Uso e Privacidade
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight text-center px-4">
+          {user?.termos_aceitos_em
+            ? 'Atualização dos Termos de Uso e Política de Privacidade'
+            : 'Termos de Uso e Privacidade'}
         </h1>
-        <p className="text-slate-500 max-w-lg mx-auto">
+        <p className="text-slate-500 max-w-lg mx-auto text-center mt-4 px-4">
           Para continuar usando o Help Me Study, por favor, leia e aceite nossos termos atualizados.
         </p>
       </div>
@@ -158,7 +160,7 @@ export default function TermosDeUso() {
             className="w-full sm:w-auto text-slate-500 hover:text-slate-700 hover:bg-slate-100"
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Sair e Voltar depois
+            Sair
           </Button>
 
           <div className="flex flex-col items-center sm:items-end w-full sm:w-auto gap-2">

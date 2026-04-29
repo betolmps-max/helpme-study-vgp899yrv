@@ -116,10 +116,15 @@ export default function Layout() {
               <div
                 id="tutorial-wallet"
                 className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 text-green-700 rounded-full font-semibold text-xs sm:text-sm border border-green-100 shadow-sm transition-all hover:shadow-md cursor-default"
+                title="Meu Saldo"
               >
                 <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{user?.saldo_helps || 0}</span>
-                <span className="hidden sm:inline-block">Helps</span>
+                <span className="hidden sm:inline-block font-medium">Meu Saldo:</span>
+                <span>
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                    user?.saldo || 0,
+                  )}
+                </span>
               </div>
               <Button
                 id="tutorial-agendamentos"

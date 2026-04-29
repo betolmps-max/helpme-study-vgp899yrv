@@ -3,6 +3,16 @@ migrate(
     const collection = app.findCollectionByNameOrId('termos_uso')
     app.truncateCollection(collection)
 
+    collection.fields.removeByName('conteudo')
+    collection.fields.add(
+      new TextField({
+        name: 'conteudo',
+        required: true,
+        max: 20000,
+      }),
+    )
+    app.save(collection)
+
     const record = new Record(collection)
     const conteudo = `TERMOS DE USO E POLÍTICA DE PRIVACIDADE
 

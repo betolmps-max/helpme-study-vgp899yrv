@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { Loader2, LogOut, Info } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export function TermosOverlay({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth()
@@ -49,11 +50,20 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
   const checkScroll = () => {
     if (viewportRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
-      if (scrollHeight <= clientHeight || scrollHeight - scrollTop - clientHeight < 20) {
+      if (
+        scrollHeight <= clientHeight ||
+        scrollHeight - Math.ceil(scrollTop) - clientHeight <= 20
+      ) {
         setHasScrolledToBottom(true)
       }
     }
   }
+
+  useEffect(() => {
+    if (termos) {
+      setHasScrolledToBottom(false)
+    }
+  }, [termos])
 
   useEffect(() => {
     if (termos && !loading && viewportRef.current) {
@@ -150,7 +160,12 @@ export function TermosOverlay({ children }: { children: React.ReactNode }) {
                         size="lg"
                         onClick={handleAccept}
                         disabled={accepting || !hasScrolledToBottom}
-                        className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 sm:px-12 text-base sm:text-lg shadow-md transition-all hover:shadow-lg disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed disabled:pointer-events-none"
+                        className={cn(
+                          'w-full sm:w-auto px-8 sm:px-12 text-base sm:text-lg transition-all duration-500',
+                          hasScrolledToBottom
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg'
+                            : 'bg-slate-200 text-slate-500 cursor-not-allowed pointer-events-none opacity-80',
+                        )}
                       >
                         {accepting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                         Li e Aceito

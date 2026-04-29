@@ -4,16 +4,20 @@ migrate(
     app.truncateCollection(collection)
 
     collection.fields.removeByName('conteudo')
-    collection.fields.add(
+    app.save(collection)
+
+    const col2 = app.findCollectionByNameOrId('termos_uso')
+    col2.fields.add(
       new TextField({
         name: 'conteudo',
         required: true,
-        max: 20000,
+        max: 200000,
       }),
     )
-    app.save(collection)
+    app.save(col2)
 
-    const record = new Record(collection)
+    const col3 = app.findCollectionByNameOrId('termos_uso')
+    const record = new Record(col3)
     const conteudo = `TERMOS DE USO E POLÍTICA DE PRIVACIDADE
 
 Bem-vindo(a) ao Help Me Study! Leia atentamente os termos abaixo antes de continuar a utilizar a nossa plataforma.

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, LogOut, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,7 +41,7 @@ export default function TermosDeUso() {
   const [loading, setLoading] = useState(true)
   const [accepting, setAccepting] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
-  const viewportRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!user) {
@@ -60,28 +60,27 @@ export default function TermosDeUso() {
       .finally(() => setLoading(false))
   }, [user, navigate])
 
-  const checkScroll = () => {
-    if (viewportRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = viewportRef.current
-      if (
-        scrollHeight <= clientHeight ||
-        scrollHeight - Math.ceil(scrollTop) - clientHeight <= 30
-      ) {
-        setHasScrolledToBottom(true)
-      }
-    }
-  }
-
   useEffect(() => {
-    if (termos && !loading && viewportRef.current) {
-      const observer = new ResizeObserver(() => checkScroll())
-      observer.observe(viewportRef.current)
-      const timeoutId = setTimeout(checkScroll, 150)
-      return () => {
-        observer.disconnect()
-        clearTimeout(timeoutId)
-      }
+    if (!termos || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasScrolledToBottom(true)
+        }
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1,
+      },
+    )
+
+    if (bottomRef.current) {
+      observer.observe(bottomRef.current)
     }
+
+    return () => observer.disconnect()
   }, [termos, loading])
 
   const handleAccept = async () => {
@@ -129,30 +128,23 @@ export default function TermosDeUso() {
         </p>
       </div>
 
-      <Card className="w-full shadow-xl border-indigo-100/50 bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col max-h-[65vh] animate-in fade-in zoom-in-95 duration-500">
-        <CardContent className="p-0 flex-1 overflow-hidden relative bg-slate-50/50">
-          <div
-            ref={viewportRef}
-            className="h-full w-full overflow-y-auto p-6 sm:p-10 scroll-smooth"
-            onScroll={() => {
-              if (!hasScrolledToBottom) checkScroll()
-            }}
-          >
-            <div className="max-w-none text-sm sm:text-base">
-              {termos?.conteudo ? (
-                formatText(termos.conteudo)
-              ) : (
-                <p className="text-center text-slate-500 italic">Nenhum termo encontrado.</p>
-              )}
-            </div>
+      <Card className="w-full shadow-xl border-indigo-100/50 bg-white/50 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-500 mb-32">
+        <CardContent className="p-6 sm:p-10 bg-slate-50/50">
+          <div className="max-w-none text-sm sm:text-base">
+            {termos?.conteudo ? (
+              formatText(termos.conteudo)
+            ) : (
+              <p className="text-center text-slate-500 italic">Nenhum termo encontrado.</p>
+            )}
           </div>
-
-          {!hasScrolledToBottom && termos?.conteudo && (
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none" />
-          )}
+          {/* This element marks the bottom of the terms content for the scroll intersection check */}
+          <div ref={bottomRef} className="h-4 w-full mt-4" />
         </CardContent>
+      </Card>
 
-        <CardFooter className="bg-white border-t p-6 flex flex-col sm:flex-row items-center justify-between gap-4 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      {/* Fixed bottom bar for actions */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center gap-4 z-50 shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.1)]">
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-4xl gap-4 px-4">
           <Button
             variant="ghost"
             onClick={handleLogout}
@@ -179,13 +171,13 @@ export default function TermosDeUso() {
               Li e Aceito
             </Button>
             {!hasScrolledToBottom && (
-              <span className="text-xs text-indigo-600 font-medium animate-pulse">
-                Role até o final para aceitar ↓
+              <span className="text-xs text-indigo-600 font-medium animate-pulse text-center">
+                Role a página até o final para aceitar ↓
               </span>
             )}
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

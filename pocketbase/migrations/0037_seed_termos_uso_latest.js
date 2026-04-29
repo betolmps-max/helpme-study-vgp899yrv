@@ -1,9 +1,28 @@
-migrate((app) => {
-  const col = app.findCollectionByNameOrId('termos_uso')
-  const record = new Record(col)
-  record.set(
-    'conteudo',
-    `**HELP ME STUDY!**
+migrate(
+  (app) => {
+    const col = app.findCollectionByNameOrId('termos_uso')
+
+    // Re-create 'conteudo' field to bump the max constraint up to 20000 characters
+    const oldField = col.fields.getByName('conteudo')
+    if (oldField) {
+      col.fields.removeByName('conteudo')
+      col.fields.add(
+        new TextField({
+          name: 'conteudo',
+          required: true,
+          max: 20000,
+        }),
+      )
+      app.save(col)
+    }
+
+    // Delete previous records to keep only the latest terms
+    app.db().newQuery('DELETE FROM termos_uso').execute()
+
+    const record = new Record(col)
+    record.set(
+      'conteudo',
+      `**HELP ME STUDY!**
 **TERMOS DE USO E POLÍTICA DE PRIVACIDADE**
 *Regulamento Geral de Utilização, Conduta e Proteção de Dados Pessoais*
 *28 de abril de 2026*
@@ -61,6 +80,10 @@ Para exercer seus direitos ou realizar denúncias de conduta, o USUÁRIO deve en
 
 *Documento atualizado em 28 de abril de 2026.*
 *HELP ME STUDY! - Tecnologia para Educação*`,
-  )
-  app.save(record)
-})
+    )
+    app.save(record)
+  },
+  (app) => {
+    app.db().newQuery('DELETE FROM termos_uso').execute()
+  },
+)

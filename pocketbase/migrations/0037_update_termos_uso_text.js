@@ -1,6 +1,21 @@
 migrate(
   (app) => {
-    const termos = app.findRecordsByFilter('termos_uso', '', '-created', 1)
+    const collection = app.findCollectionByNameOrId('termos_uso')
+
+    // Truncate existing records to avoid issues when changing schema
+    app.truncateCollection(collection)
+
+    // Remove and recreate field to bump the max constraint
+    collection.fields.removeByName('conteudo')
+    collection.fields.add(
+      new TextField({
+        name: 'conteudo',
+        required: true,
+        max: 20000,
+      }),
+    )
+    app.save(collection)
+
     const content = `**HELP ME STUDY!**
 **TERMOS DE USO E POLÍTICA DE PRIVACIDADE**
 Regulamento Geral de Utilização, Conduta e Proteção de Dados Pessoais
@@ -81,16 +96,9 @@ Para exercer seus direitos ou realizar denúncias de conduta, o USUÁRIO deve en
 Documento atualizado em 28 de abril de 2026.
 HELP ME STUDY! - Tecnologia para Educação`
 
-    if (termos && termos.length > 0) {
-      const record = termos[0]
-      record.set('conteudo', content)
-      app.save(record)
-    } else {
-      const collection = app.findCollectionByNameOrId('termos_uso')
-      const record = new Record(collection)
-      record.set('conteudo', content)
-      app.save(record)
-    }
+    const record = new Record(collection)
+    record.set('conteudo', content)
+    app.save(record)
   },
   (app) => {
     // Revert not strictly needed for this simple seeding

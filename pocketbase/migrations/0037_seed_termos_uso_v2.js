@@ -2,6 +2,19 @@ migrate(
   (app) => {
     const col = app.findCollectionByNameOrId('termos_uso')
 
+    // Bump the max constraint of the conteudo field to accommodate the new longer terms
+    if (col.fields.getByName('conteudo')) {
+      col.fields.removeByName('conteudo')
+      col.fields.add(
+        new TextField({
+          name: 'conteudo',
+          required: false,
+          max: 50000,
+        }),
+      )
+      app.save(col)
+    }
+
     const text = `**HELP ME STUDY!**
 **TERMOS DE USO E POLÍTICA DE PRIVACIDADE**
 Regulamento Geral de Utilização, Conduta e Proteção de Dados Pessoais
@@ -66,7 +79,6 @@ HELP ME STUDY! - Tecnologia para Educação`
     app.save(record)
   },
   (app) => {
-    // Try to find and delete the specific record created if we need to rollback
     try {
       const col = app.findCollectionByNameOrId('termos_uso')
       const records = app.findRecordsByFilter(

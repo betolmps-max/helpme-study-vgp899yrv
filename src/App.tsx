@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout'
 import GestaoLider from './pages/GestaoLider'
 import Profile from './pages/Profile'
 import BuscarMonitores from './pages/BuscarMonitores'
+import TermosDeUso from './pages/TermosDeUso'
 import Layout from './components/Layout'
 import Chat from './pages/Chat'
 import { AuthProvider } from './hooks/use-auth'
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/gestao-lider" element={<GestaoLider />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/monitores/busca" element={<BuscarMonitores />} />
+            <Route path="/termos-de-uso" element={<TermosDeUso />} />
             <Route path="/chat" element={<Chat />} />
 
             <Route element={<AdminRoute />}>

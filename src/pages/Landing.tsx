@@ -19,23 +19,23 @@ export default function Landing() {
   const roles = [
     {
       id: 'responsavel',
-      label: 'Sou pai/mãe',
+      label: 'Pai/ mãe',
       img: 'https://img.usecurling.com/i?q=house&shape=lineal-color',
     },
     {
-      id: 'professor',
-      label: 'Sou professor',
-      img: 'https://img.usecurling.com/i?q=apple&shape=lineal-color',
+      id: 'monitor',
+      label: 'Monitor',
+      img: 'https://img.usecurling.com/i?q=chalkboard&shape=lineal-color',
     },
     {
       id: 'student',
-      label: 'Sou aluno(a)',
+      label: 'Estudante',
       img: 'https://img.usecurling.com/i?q=backpack&shape=lineal-color',
     },
     {
-      id: 'monitor',
-      label: 'Sou líder escolar',
-      img: 'https://img.usecurling.com/i?q=medal&shape=lineal-color',
+      id: 'lider_escolar',
+      label: 'Anfitrião/ Líder escolar',
+      img: 'https://img.usecurling.com/i?q=building&shape=lineal-color',
     },
   ]
 

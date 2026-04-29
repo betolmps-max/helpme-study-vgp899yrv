@@ -3,7 +3,18 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Book, Eye, EyeOff, GraduationCap, Loader2, Lock, Mail, User, Users } from 'lucide-react'
+import {
+  Book,
+  Building,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Loader2,
+  Lock,
+  Mail,
+  User,
+  Users,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -30,7 +41,7 @@ import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 import logoImg from '@/assets/adapta-image-1776703638057-8b530.png'
 
 const signupSchema = z.object({
-  role: z.enum(['professor', 'monitor', 'student', 'responsavel'], {
+  role: z.enum(['responsavel', 'monitor', 'student', 'lider_escolar'], {
     required_error: 'Por favor, selecione seu perfil',
   }),
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
@@ -47,7 +58,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 const ROLES = [
   {
     id: 'responsavel',
-    label: 'Pai/Mãe',
+    label: 'Pai/ mãe',
     icon: Users,
     color: 'purple',
     classes: {
@@ -59,16 +70,16 @@ const ROLES = [
     },
   },
   {
-    id: 'professor',
-    label: 'Professor',
+    id: 'monitor',
+    label: 'Monitor',
     icon: GraduationCap,
-    color: 'blue',
+    color: 'green',
     classes: {
-      selected: 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500',
-      hover: 'hover:border-blue-200 hover:bg-blue-50/50',
-      icon: 'text-blue-600',
-      button: 'bg-blue-600 hover:bg-blue-700',
-      focus: 'focus-visible:ring-blue-600',
+      selected: 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500',
+      hover: 'hover:border-emerald-200 hover:bg-emerald-50/50',
+      icon: 'text-emerald-600',
+      button: 'bg-emerald-600 hover:bg-emerald-700',
+      focus: 'focus-visible:ring-emerald-600',
     },
   },
   {
@@ -85,16 +96,16 @@ const ROLES = [
     },
   },
   {
-    id: 'monitor',
-    label: 'Monitor',
-    icon: Users,
-    color: 'green',
+    id: 'lider_escolar',
+    label: 'Anfitrião/ Líder escolar',
+    icon: Building,
+    color: 'blue',
     classes: {
-      selected: 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500',
-      hover: 'hover:border-emerald-200 hover:bg-emerald-50/50',
-      icon: 'text-emerald-600',
-      button: 'bg-emerald-600 hover:bg-emerald-700',
-      focus: 'focus-visible:ring-emerald-600',
+      selected: 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500',
+      hover: 'hover:border-blue-200 hover:bg-blue-50/50',
+      icon: 'text-blue-600',
+      button: 'bg-blue-600 hover:bg-blue-700',
+      focus: 'focus-visible:ring-blue-600',
     },
   },
 ] as const

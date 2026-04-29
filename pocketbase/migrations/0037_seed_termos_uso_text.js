@@ -5,14 +5,15 @@ migrate(
     const oldField = collection.fields.getByName('conteudo')
     if (oldField) {
       collection.fields.removeByName('conteudo')
-      collection.fields.add(
-        new TextField({
-          name: 'conteudo',
-          required: true,
-        }),
-      )
-      app.save(collection)
     }
+    collection.fields.add(
+      new TextField({
+        name: 'conteudo',
+        required: true,
+        max: 50000,
+      }),
+    )
+    app.save(collection)
 
     const existing = app.findRecordsByFilter('termos_uso', "id != ''", '', 100, 0)
     for (let rec of existing) {

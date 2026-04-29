@@ -1,6 +1,6 @@
 migrate(
   (app) => {
-    const col = app.findCollectionByNameOrId('termos_uso')
+    let col = app.findCollectionByNameOrId('termos_uso')
 
     // Bump the max constraint of the conteudo field to accommodate the new longer terms
     if (col.fields.getByName('conteudo')) {
@@ -13,6 +13,9 @@ migrate(
         }),
       )
       app.save(col)
+
+      // Refetch the collection to ensure the updated schema constraints are loaded for validation
+      col = app.findCollectionByNameOrId('termos_uso')
     }
 
     const text = `**HELP ME STUDY!**

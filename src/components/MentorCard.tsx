@@ -1,25 +1,17 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
-import { CalendarIcon, Clock, BookOpen, Star } from 'lucide-react'
+import { CalendarIcon, Clock, BookOpen, Star, ArrowLeft, User } from 'lucide-react'
 
 import { useToast } from '@/hooks/use-toast'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { createAgendamento } from '@/services/agendamentos'
-import { cn } from '@/lib/utils'
 import pb from '@/lib/pocketbase/client'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -43,14 +35,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 
 const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 8) // 08:00 to 22:00
 
 function parseAvailabilitySlots(text: string) {
   const active = new Set<string>()
@@ -124,14 +112,25 @@ const bookingSchema = z.object({
 
 export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any) {
   const [open, setOpen] = useState(false)
-  const [isAvailabilityExpanded, setIsAvailabilityExpanded] = useState(false)
-  const [isBioExpanded, setIsBioExpanded] = useState(false)
+  const [bookingSlot, setBookingSlot] = useState<{
+    dayIdx: number
+    hour: number
+    date: Date
+  } | null>(null)
   const { toast } = useToast()
 
   const form = useForm<z.infer<typeof bookingSchema>>({
     resolver: zodResolver(bookingSchema),
     defaultValues: { assunto: '', horario_inicio: '', horario_fim: '', local: '' },
   })
+
+  // Reset booking slot when dialog closes
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => setBookingSlot(null), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
 
   const mentorUser = profile.expand?.user_id
   const name = mentorUser?.name || 'Usuário Sem Nome'
@@ -145,11 +144,20 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
     [profile.availability],
   )
 
-  const handleSlotClick = (dayIdx: number, hour: number) => {
-    form.setValue('horario_inicio', `${String(hour).padStart(2, '0')}:00`)
-    form.setValue('horario_fim', `${String(hour + 1).padStart(2, '0')}:00`)
+  const slotsByDay = useMemo(() => {
+    const grouped = Array.from({ length: 7 }, () => [] as number[])
+    activeSlots.forEach((slot) => {
+      const [d, h] = slot.split('-').map(Number)
+      if (d >= 0 && d < 7) grouped[d].push(h)
+    })
+    return grouped.map((hours) => Array.from(new Set(hours)).sort((a, b) => a - b))
+  }, [activeSlots])
 
-    // dayIdx: 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sáb, 6=Dom
+  const daysWithSlots = DAYS.map((day, idx) => ({ day, idx, hours: slotsByDay[idx] })).filter(
+    (d) => d.hours.length > 0,
+  )
+
+  const handleSlotClick = (dayIdx: number, hour: number) => {
     const targetJsDay = dayIdx === 6 ? 0 : dayIdx + 1
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -158,11 +166,16 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
     let diff = targetJsDay - currentDay
     if (diff < 0) {
       diff += 7
+    } else if (diff === 0 && new Date().getHours() >= hour) {
+      diff += 7
     }
 
     d.setDate(d.getDate() + diff)
+
     form.setValue('data_agendamento', d)
-    setOpen(true)
+    form.setValue('horario_inicio', `${String(hour).padStart(2, '0')}:00`)
+    form.setValue('horario_fim', `${String(hour + 1).padStart(2, '0')}:00`)
+    setBookingSlot({ dayIdx, hour, date: d })
   }
 
   const onSubmit = async (data: z.infer<typeof bookingSchema>) => {
@@ -201,220 +214,259 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
   const avatarUrl = mentorUser?.avatar ? pb.files.getURL(mentorUser, mentorUser.avatar) : undefined
 
   return (
-    <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
-      <CardHeader className="flex flex-row items-center gap-4 pb-4">
-        <Avatar className="h-16 w-16 border">
-          {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
-          ) : (
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="flex flex-col">
-          <div className="flex flex-col items-start gap-1 w-full">
-            <div className="flex items-center justify-between w-full gap-2">
-              <CardTitle className="text-lg line-clamp-1" title={name}>
-                {name}
-              </CardTitle>
-              {mentorUser?.user_type === 'professor' && (
-                <Badge className="bg-blue-600 hover:bg-blue-700 shrink-0">Professor</Badge>
-              )}
-              {mentorUser?.user_type === 'monitor' && (
-                <Badge variant="secondary" className="shrink-0">
-                  Monitor
-                </Badge>
-              )}
-              {mentorUser?.user_type === 'student' && (
-                <Badge variant="outline" className="border-green-600 text-green-700 shrink-0">
-                  Estudante
-                </Badge>
-              )}
-              {mentorUser?.user_type === 'responsavel' && (
-                <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600 shrink-0">
-                  Pai/Mãe (Responsável)
-                </Badge>
-              )}
-              {mentorUser?.user_type === 'lider_escolar' && (
-                <Badge className="bg-purple-600 hover:bg-purple-700 shrink-0">Líder Escolar</Badge>
-              )}
-            </div>
-            <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-1 mt-1">
-              {(mentorUser?.user_type === 'professor' || mentorUser?.user_type === 'monitor') && (
-                <span className="flex items-center gap-1">
-                  {valorSessao > 0
-                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number((valorSessao * 1.05).toFixed(2)))}/sessão`
-                    : 'Gratuito'}
-                  {valorSessao > 0 && (
-                    <span className="text-[10px] text-muted-foreground font-normal">
-                      (inclui 5% de taxa)
-                    </span>
-                  )}
-                </span>
-              )}
-              {totalAvaliacoes > 0 && (
-                <span className="flex items-center text-yellow-600 text-xs font-semibold">
-                  <Star className="h-3.5 w-3.5 fill-current mr-1" />
-                  {media.toFixed(1)}
-                  <span className="text-muted-foreground font-normal ml-1">
-                    ({totalAvaliacoes} avaliações)
-                  </span>
-                </span>
-              )}
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 space-y-5">
-        {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') && (
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <BookOpen className="h-3.5 w-3.5" /> Disciplinas
-            </h4>
-            <div className="flex flex-wrap gap-1.5">
-              {subjects.length > 0 ? (
-                subjects.map((s: string, i: number) => (
-                  <Badge key={i} variant="secondary" className="font-normal">
-                    {s}
-                  </Badge>
-                ))
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Card className="flex flex-col h-full hover:shadow-md transition-all cursor-pointer hover:border-primary/50 relative overflow-hidden group">
+          <CardHeader className="flex flex-row items-start gap-4 pb-4">
+            <Avatar className="h-14 w-14 border shrink-0">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
               ) : (
-                <span className="text-sm text-muted-foreground italic">Não informadas</span>
+                <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                  {name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
               )}
-            </div>
-          </div>
-        )}
-        {profile.bio && (
-          <div className="overflow-hidden">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-              Sobre
-            </h4>
-            <div
-              className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1"
-              onDoubleClick={() => setIsBioExpanded(!isBioExpanded)}
-              title="Dê um duplo clique para expandir/recolher"
-            >
-              <p
-                className={cn(
-                  'text-sm text-foreground/90 leading-relaxed transition-all duration-300 break-words',
-                  !isBioExpanded && 'line-clamp-3',
+            </Avatar>
+            <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex items-center justify-between w-full gap-2">
+                <CardTitle className="text-lg truncate" title={name}>
+                  {name}
+                </CardTitle>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {mentorUser?.user_type === 'professor' && (
+                  <Badge className="bg-blue-600 hover:bg-blue-700 text-[10px] px-1.5 py-0 h-4">
+                    Professor
+                  </Badge>
                 )}
-              >
-                {profile.bio}
-              </p>
-              {!isBioExpanded && profile.bio?.length > 100 && (
-                <p className="text-[10px] text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Duplo clique para expandir
-                </p>
-              )}
+                {mentorUser?.user_type === 'monitor' && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                    Monitor
+                  </Badge>
+                )}
+                {mentorUser?.user_type === 'student' && (
+                  <Badge
+                    variant="outline"
+                    className="border-green-600 text-green-700 text-[10px] px-1.5 py-0 h-4"
+                  >
+                    Estudante
+                  </Badge>
+                )}
+              </div>
+              <CardDescription className="capitalize font-medium text-primary/80 flex flex-col gap-0.5 mt-1.5">
+                {(mentorUser?.user_type === 'professor' || mentorUser?.user_type === 'monitor') && (
+                  <span className="flex items-center gap-1 text-xs">
+                    {valorSessao > 0
+                      ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number((valorSessao * 1.05).toFixed(2)))}`
+                      : 'Gratuito'}
+                  </span>
+                )}
+                {totalAvaliacoes > 0 && (
+                  <span className="flex items-center text-yellow-600 text-[11px] font-semibold">
+                    <Star className="h-3 w-3 fill-current mr-1" />
+                    {media.toFixed(1)}
+                    <span className="text-muted-foreground font-normal ml-1">
+                      ({totalAvaliacoes})
+                    </span>
+                  </span>
+                )}
+              </CardDescription>
             </div>
-          </div>
-        )}
-        {profile.availability && (
-          <div className="flex flex-col gap-1.5">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" /> Disponibilidade
-            </h4>
-            {activeSlots.size > 0 ? (
-              <div className="border rounded-md overflow-hidden bg-background flex flex-col mt-1 shadow-sm">
-                <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b bg-muted/40">
-                  <div className="p-1 text-[10px] font-medium text-center border-r w-10 shrink-0" />
-                  {DAYS.map((d) => (
-                    <div
-                      key={d}
-                      className="py-1 px-0.5 text-[10px] font-medium text-center border-r last:border-0 truncate"
-                    >
-                      {d}
-                    </div>
-                  ))}
-                </div>
-                <ScrollArea className="h-[140px] w-full">
-                  <div className="min-w-[220px]">
-                    {HOURS.map((h) => (
-                      <div
-                        key={h}
-                        className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b last:border-0"
-                      >
-                        <div className="py-1 px-0.5 text-[9px] text-muted-foreground text-center border-r w-10 shrink-0 flex items-center justify-center bg-muted/10">
-                          {h}:00
-                        </div>
-                        {DAYS.map((_, dayIdx) => {
-                          const isActive = activeSlots.has(`${dayIdx}-${h}`)
-                          return (
-                            <div
-                              key={dayIdx}
-                              role="button"
-                              tabIndex={isActive ? 0 : -1}
-                              onClick={() => {
-                                if (isActive) handleSlotClick(dayIdx, h)
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault()
-                                  if (isActive) handleSlotClick(dayIdx, h)
-                                }
-                              }}
-                              className={cn(
-                                'border-r last:border-0 transition-colors h-6',
-                                isActive
-                                  ? 'bg-primary/40 hover:bg-primary/60 cursor-pointer border-primary/20'
-                                  : 'bg-transparent hover:bg-muted/30 cursor-default',
-                              )}
-                              title={isActive ? `Agendar ${DAYS[dayIdx]} às ${h}:00` : undefined}
-                            />
-                          )
-                        })}
-                      </div>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') &&
+              subjects.length > 0 && (
+                <div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {subjects.slice(0, 3).map((s: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="font-normal text-xs">
+                        {s}
+                      </Badge>
                     ))}
+                    {subjects.length > 3 && (
+                      <Badge variant="secondary" className="font-normal text-xs">
+                        +{subjects.length - 3}
+                      </Badge>
+                    )}
                   </div>
-                  <ScrollBar orientation="vertical" />
-                </ScrollArea>
-                <div className="bg-muted/20 p-1 text-center border-t">
-                  <p className="text-[10px] text-muted-foreground">
-                    * Clique num horário verde para agendar
-                  </p>
+                </div>
+              )}
+            {profile.bio && (
+              <p className="text-sm text-muted-foreground line-clamp-2">{profile.bio}</p>
+            )}
+          </CardContent>
+          <div className="bg-primary/5 p-2.5 text-center text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity mt-auto border-t border-primary/10">
+            Ver perfil completo e agendar
+          </div>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-0">
+        <div className="p-6">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl">
+              {bookingSlot ? 'Confirmar Agendamento' : 'Perfil do Monitor'}
+            </DialogTitle>
+            {bookingSlot && (
+              <DialogDescription>
+                Preencha os detalhes abaixo para solicitar a sessão.
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          {!bookingSlot ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <Avatar className="h-24 w-24 border-2 shadow-sm">
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-primary/10 text-primary text-3xl">
+                      {name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex flex-col gap-2 flex-1">
+                  <h2 className="text-2xl font-bold tracking-tight">{name}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {mentorUser?.user_type === 'professor' && (
+                      <Badge className="bg-blue-600 hover:bg-blue-700">Professor</Badge>
+                    )}
+                    {mentorUser?.user_type === 'monitor' && (
+                      <Badge variant="secondary">Monitor</Badge>
+                    )}
+                    {mentorUser?.user_type === 'student' && (
+                      <Badge variant="outline" className="border-green-600 text-green-700">
+                        Estudante
+                      </Badge>
+                    )}
+                    {totalAvaliacoes > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1 px-2"
+                      >
+                        <Star className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+                        {media.toFixed(1)} ({totalAvaliacoes} avaliações)
+                      </Badge>
+                    )}
+                  </div>
+                  {(mentorUser?.user_type === 'professor' ||
+                    mentorUser?.user_type === 'monitor') && (
+                    <p className="text-sm font-medium text-muted-foreground mt-1">
+                      Valor da sessão:{' '}
+                      <span className="text-primary font-bold">
+                        {valorSessao > 0
+                          ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number((valorSessao * 1.05).toFixed(2)))}`
+                          : 'Gratuito'}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
-            ) : (
-              <div
-                className="group relative cursor-pointer select-none rounded-md transition-colors hover:bg-muted/30 p-1 -m-1 overflow-hidden"
-                onDoubleClick={() => setIsAvailabilityExpanded(!isAvailabilityExpanded)}
-                title="Dê um duplo clique para expandir/recolher"
-              >
-                <p
-                  className={cn(
-                    'text-sm text-foreground/90 transition-all duration-300 break-words',
-                    !isAvailabilityExpanded && 'line-clamp-3',
-                  )}
-                >
-                  {profile.availability}
-                </p>
-                {!isAvailabilityExpanded && profile.availability?.length > 100 && (
-                  <p className="text-[10px] text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Duplo clique para expandir
-                  </p>
+
+              {profile.bio && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <User className="h-5 w-5 text-muted-foreground" /> Sobre
+                  </h3>
+                  <div className="bg-muted/30 p-4 rounded-lg text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap border border-muted">
+                    {profile.bio}
+                  </div>
+                </div>
+              )}
+
+              {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') &&
+                subjects.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-muted-foreground" /> Disciplinas
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {subjects.map((s: string, i: number) => (
+                        <Badge
+                          key={i}
+                          variant="secondary"
+                          className="px-3 py-1 text-sm font-normal bg-primary/5 hover:bg-primary/10 text-primary border-primary/20"
+                        >
+                          {s}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
+
+              {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-muted-foreground" /> Horários Disponíveis
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Selecione um horário abaixo para agendar sua sessão.
+                  </p>
+
+                  {daysWithSlots.length > 0 ? (
+                    <ScrollArea className="w-full pb-6">
+                      <div className="flex gap-4 min-w-max">
+                        {daysWithSlots.map(({ day, idx, hours }) => (
+                          <div
+                            key={day}
+                            className="flex flex-col items-center w-28 shrink-0 bg-card rounded-xl p-3 border shadow-sm"
+                          >
+                            <div className="font-semibold text-sm mb-4 text-foreground">{day}</div>
+                            <div className="flex flex-col gap-2.5 w-full">
+                              {hours.map((h) => (
+                                <Button
+                                  key={h}
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full rounded-full shadow-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all font-medium"
+                                  onClick={() => handleSlotClick(idx, h)}
+                                >
+                                  {String(h).padStart(2, '0')}:00
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  ) : (
+                    <div className="bg-muted/30 p-6 rounded-lg border text-center">
+                      <CalendarIcon className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        {profile.availability && profile.availability.trim() !== ''
+                          ? profile.availability
+                          : 'Nenhum horário estruturado informado pelo monitor.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <Button
+                variant="ghost"
+                className="mb-4 -ml-3 text-muted-foreground hover:text-foreground"
+                onClick={() => setBookingSlot(null)}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Voltar ao perfil
+              </Button>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-primary">Horário Selecionado</p>
+                  <p className="text-lg font-bold text-foreground">
+                    {format(bookingSlot.date, 'dd/MM/yyyy')} às{' '}
+                    {String(bookingSlot.hour).padStart(2, '0')}:00
+                  </p>
+                </div>
+                <CalendarIcon className="h-8 w-8 text-primary/50" />
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-      {(mentorUser?.user_type === 'monitor' || mentorUser?.user_type === 'professor') && (
-        <CardFooter className="pt-4 border-t">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full">Agendar Sessão</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Agendar com {name}</DialogTitle>
-                <DialogDescription>
-                  Preencha os detalhes abaixo para solicitar um agendamento.
-                </DialogDescription>
-              </DialogHeader>
+
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
                     control={form.control}
                     name="assunto"
@@ -423,7 +475,7 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                         <FormLabel>Assunto / Disciplina</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-12">
                               <SelectValue placeholder="Selecione o assunto" />
                             </SelectTrigger>
                           </FormControl>
@@ -446,73 +498,26 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="data_agendamento"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={'outline'}
-                                className={cn(
-                                  'w-full pl-3 text-left font-normal',
-                                  !field.value && 'text-muted-foreground',
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, 'dd/MM/yyyy')
-                                ) : (
-                                  <span>Escolha uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+
+                  {/* Keep the date/time fields hidden or read-only since they are set by the bubble */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                    <FormField
+                      control={form.control}
+                      name="data_agendamento"
+                      render={() => <FormItem />}
+                    />
                     <FormField
                       control={form.control}
                       name="horario_inicio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Início (HH:MM)</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={() => <FormItem />}
                     />
                     <FormField
                       control={form.control}
                       name="horario_fim"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Fim (HH:MM)</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={() => <FormItem />}
                     />
                   </div>
+
                   <FormField
                     control={form.control}
                     name="local"
@@ -521,7 +526,7 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                         <FormLabel>Local</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-12">
                               <SelectValue placeholder="Selecione o local" />
                             </SelectTrigger>
                           </FormControl>
@@ -537,33 +542,34 @@ export function MentorCard({ profile, user, disciplinas, locais, onBooked }: any
                       </FormItem>
                     )}
                   />
-                  <div className="pt-2 space-y-3">
+
+                  <div className="pt-4 space-y-4">
                     {valorSessao > 0 && (
-                      <div className="flex justify-between items-center p-3 bg-muted/50 rounded-md border">
-                        <span className="text-sm font-medium">Total a pagar:</span>
+                      <div className="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
+                        <span className="text-base font-medium">Total a pagar:</span>
                         <div className="text-right">
-                          <p className="font-bold text-primary">
+                          <p className="text-xl font-bold text-primary">
                             {new Intl.NumberFormat('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
                             }).format(Number((valorSessao * 1.05).toFixed(2)))}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             Inclui 5% de taxa da plataforma
                           </p>
                         </div>
                       </div>
                     )}
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full h-12 text-lg font-bold">
                       Confirmar Agendamento
                     </Button>
                   </div>
                 </form>
               </Form>
-            </DialogContent>
-          </Dialog>
-        </CardFooter>
-      )}
-    </Card>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

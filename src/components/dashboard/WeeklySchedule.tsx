@@ -77,6 +77,16 @@ export function WeeklySchedule() {
         filter = depIds.map((id) => `estudante_id = "${id}"`).join(' || ')
       } else if (user.user_type === 'student') {
         filter = `estudante_id = "${user.id}"`
+      } else if (user.user_type === 'lider_escolar') {
+        const favoritos = await pb.collection('favoritos_locais').getFullList({
+          filter: `user_id = "${user.id}"`,
+        })
+        const favIds = favoritos.map((f) => f.local_id).filter(Boolean)
+        const parts = [`local_id.lider_id = "${user.id}"`]
+        if (favIds.length > 0) {
+          parts.push(favIds.map((id) => `local_id = "${id}"`).join(' || '))
+        }
+        filter = parts.join(' || ')
       } else {
         filter = `monitor_id = "${user.id}"`
       }
@@ -311,6 +321,11 @@ export function WeeklySchedule() {
     if (user?.user_type === 'student' || user?.user_type === 'responsavel') {
       return app.expand?.monitor_id?.name || 'Monitor'
     }
+    if (user?.user_type === 'lider_escolar') {
+      const student = app.expand?.estudante_id?.name?.split(' ')[0] || 'Estudante'
+      const monitor = app.expand?.monitor_id?.name?.split(' ')[0] || 'Monitor'
+      return `${student} - ${monitor}`
+    }
     return app.expand?.estudante_id?.name || 'Estudante'
   }
 
@@ -325,7 +340,9 @@ export function WeeklySchedule() {
           <CardDescription className="text-slate-500">
             {user?.user_type === 'responsavel'
               ? 'Visualize os horários e agendamentos dos seus dependentes'
-              : 'Visualize seus horários e agendamentos da semana'}
+              : user?.user_type === 'lider_escolar'
+                ? 'Visualize as atividades e agendamentos nos seus locais'
+                : 'Visualize seus horários e agendamentos da semana'}
           </CardDescription>
         </div>
         <div className="flex items-center gap-3 bg-slate-50 p-1 rounded-lg border border-slate-200">
@@ -416,11 +433,13 @@ export function WeeklySchedule() {
                     }
                   })
 
-                  const available = isSlotAvailable(day.getDay(), hour)
+                  const available =
+                    user?.user_type === 'lider_escolar'
+                      ? false
+                      : isSlotAvailable(day.getDay(), hour)
 
                   const isCellActive =
                     activeCell?.dayIndex === day.getDay() && activeCell?.hour === hour
-
                   return (
                     <Popover
                       key={`${day.toISOString()}-${hour}`}
@@ -442,7 +461,9 @@ export function WeeklySchedule() {
                             'border-r border-b border-slate-200/50 p-0.5 min-h-[38px] md:min-h-[45px] transition-colors relative group cursor-pointer select-none',
                             available && cellAppointments.length === 0
                               ? 'bg-transparent hover:bg-indigo-50/50'
-                              : !available && cellAppointments.length === 0
+                              : !available &&
+                                  cellAppointments.length === 0 &&
+                                  user?.user_type !== 'lider_escolar'
                                 ? 'bg-slate-100 hover:bg-slate-200/50'
                                 : 'bg-transparent hover:bg-slate-50',
                             isCellActive && isMenuOpen && 'ring-2 ring-indigo-500 ring-inset z-20',
@@ -487,51 +508,68 @@ export function WeeklySchedule() {
 
                           {cellAppointments.length === 0 ? (
                             <>
-                              {!available ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="justify-start font-medium text-xs h-8 px-2"
-                                  onClick={handleMakeAvailable}
-                                >
-                                  Disponibilizar horário
-                                </Button>
-                              ) : (
+                              {user?.user_type !== 'lider_escolar' && (
                                 <>
-                                  {(user?.user_type === 'student' ||
-                                    user?.user_type === 'responsavel') && (
+                                  {!available ? (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="justify-start font-medium text-xs h-8 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                                      onClick={() => {
-                                        setIsMenuOpen(false)
-                                        navigate('/buscar-monitores')
-                                      }}
+                                      className="justify-start font-medium text-xs h-8 px-2"
+                                      onClick={handleMakeAvailable}
                                     >
-                                      Buscar monitor
+                                      Disponibilizar horário
                                     </Button>
+                                  ) : (
+                                    <>
+                                      {(user?.user_type === 'student' ||
+                                        user?.user_type === 'responsavel') && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="justify-start font-medium text-xs h-8 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                          onClick={() => {
+                                            setIsMenuOpen(false)
+                                            navigate('/buscar-monitores')
+                                          }}
+                                        >
+                                          Buscar monitor
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                        onClick={handleRemoveAvailability}
+                                      >
+                                        Remover disponibilidade
+                                      </Button>
+                                    </>
                                   )}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                                    onClick={handleRemoveAvailability}
-                                  >
-                                    Remover disponibilidade
-                                  </Button>
                                 </>
+                              )}
+                              {user?.user_type === 'lider_escolar' && (
+                                <div className="px-2 py-1 text-xs text-slate-500 italic">
+                                  Nenhuma atividade neste horário
+                                </div>
                               )}
                             </>
                           ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                              onClick={handleCancelAppointment}
-                            >
-                              Cancelar Agendamento
-                            </Button>
+                            <>
+                              {user?.user_type !== 'lider_escolar' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="justify-start font-medium text-xs h-8 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                  onClick={handleCancelAppointment}
+                                >
+                                  Cancelar Agendamento
+                                </Button>
+                              ) : (
+                                <div className="px-2 py-1 text-xs text-slate-500 italic">
+                                  Apenas visualização permitida
+                                </div>
+                              )}
+                            </>
                           )}
                         </PopoverContent>
                       )}

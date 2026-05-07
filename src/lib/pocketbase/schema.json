@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-29T17:53:13.585Z",
+  "generatedAt": "2026-05-07T12:04:38.883Z",
   "collections": [
     {
       "name": "users",
@@ -229,8 +229,8 @@
       "name": "agendamentos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
-        "view": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
+        "list": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id || estudante_id.responsabilidade_vinculos_via_dependente_id.responsavel_id ?= @request.auth.id || local_id.favoritos_locais_via_local_id.user_id ?= @request.auth.id",
+        "view": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id || estudante_id.responsabilidade_vinculos_via_dependente_id.responsavel_id ?= @request.auth.id || local_id.favoritos_locais_via_local_id.user_id ?= @request.auth.id",
         "create": "@request.auth.id != ''",
         "update": "@request.auth.is_admin = true || estudante_id = @request.auth.id || monitor_id = @request.auth.id || local_id.lider_id = @request.auth.id",
         "delete": "@request.auth.is_admin = true"
